@@ -1,3 +1,22 @@
+// Pointer / touch event helpers (iOS Safari < 13 fallback)
+function onPointerMove(el, fn) {
+  if (window.PointerEvent) {
+    el.addEventListener('pointermove', fn, { passive: true });
+  } else {
+    el.addEventListener('touchmove', function (e) {
+      fn({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
+    }, { passive: true });
+  }
+}
+function onPointerLeave(el, fn) {
+  if (window.PointerEvent) {
+    el.addEventListener('pointerleave', fn);
+  } else {
+    el.addEventListener('touchend', fn);
+    el.addEventListener('touchcancel', fn);
+  }
+}
+
 const projectData = [
   {title:'Stories with a pulse.',kicker:'01 / Commercial & Social',desc:'Fast, intentional edits built for attention — from the first frame to the final CTA. This project represents my approach to rhythm, pacing, sound design and visual storytelling.',role:'Editing · Motion · Sound',type:'Video Production',file:'assets/PORTFOLIO/VIDEO 1.mp4'},
   {title:'Ideas, in motion.',kicker:'02 / Motion Graphics',desc:'Motion is used to make information easier to understand and give a brand a distinct visual language without overwhelming the message.',role:'Art Direction · Motion',type:'Motion Graphics',file:'assets/PORTFOLIO/VIDEO 2.mp4'},
@@ -104,17 +123,21 @@ function setSectionPlayback(visible){
     if(wasPlaying){v.play().catch(()=>{});playBtn.textContent='⏸';}
   }
 }
-new IntersectionObserver(entries=>{
-  entries.forEach(e=>setSectionPlayback(e.isIntersecting));
-},{threshold:.05}).observe(document.querySelector('#work'));
+if(window.IntersectionObserver){
+  new IntersectionObserver(entries=>{
+    entries.forEach(e=>setSectionPlayback(e.isIntersecting));
+  },{threshold:.05}).observe(document.querySelector('#work'));
+}
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden)setSectionPlayback(false);
   else if(sectionInView)setSectionPlayback(true);
 });
 let sectionInView=true;
-new IntersectionObserver(entries=>{
-  entries.forEach(e=>{sectionInView=e.isIntersecting;});
-},{threshold:.05}).observe(document.querySelector('#work'));
+if(window.IntersectionObserver){
+  new IntersectionObserver(entries=>{
+    entries.forEach(e=>{sectionInView=e.isIntersecting;});
+  },{threshold:.05}).observe(document.querySelector('#work'));
+}
 layers.forEach(l=>{
   const v=l.querySelector('video');
   v.addEventListener('loadedmetadata',()=>{
@@ -133,6 +156,7 @@ playBtn.addEventListener('click',()=>{
   if(v.paused){v.play().catch(()=>{});}else{v.pause();}
 });
 window.addEventListener('pointerup',()=>{scrubbing=false});
+window.addEventListener('touchend',()=>{scrubbing=false});
 seek.addEventListener('change',()=>{
   scrubbing=false;
   const frac=seek.value/1000;
@@ -150,10 +174,12 @@ seek.addEventListener('input',()=>{
 });
 
 const slides=[...document.querySelectorAll('.work-slide')];
-const observer=new IntersectionObserver(entries=>{
-  entries.forEach(entry=>{if(entry.isIntersecting) activate(Number(entry.target.dataset.index));});
-},{root:null,threshold:.55});
-slides.forEach(s=>observer.observe(s));
+if(window.IntersectionObserver){
+  const observer=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{if(entry.isIntersecting) activate(Number(entry.target.dataset.index));});
+  },{root:null,threshold:.55});
+  slides.forEach(s=>observer.observe(s));
+}
 
 // FAQ accordion
 const faqItems=[...document.querySelectorAll('.faq-item')];
@@ -288,7 +314,7 @@ const dockItems=[
 const dockScale=dockItems.map(()=>1);
 const dockTarget=dockItems.map(()=>1);
 dockItems.forEach(d=>{d.el.style.transformOrigin=d.ox;d.w=d.el.offsetWidth;const cs=getComputedStyle(d.el);d.bml=parseFloat(cs.marginLeft)||0;d.bmr=parseFloat(cs.marginRight)||0;});
-headerBar.addEventListener('pointermove',e=>{
+onPointerMove(headerBar, function(e){
   const R=95;
   dockItems.forEach((d,i)=>{
     const r=d.el.getBoundingClientRect();
@@ -297,21 +323,25 @@ headerBar.addEventListener('pointermove',e=>{
     dockTarget[i]=dist>=R?1:1+(d.max-1)*Math.pow(Math.cos(Math.min(dist/R,1)*Math.PI/2),2);
   });
 });
-headerBar.addEventListener('pointerleave',()=>dockTarget.fill(1));
-(function dockLoop(){
-  let growSum=0;
-  dockItems.forEach((d,i)=>{
-    dockScale[i]+=(dockTarget[i]-dockScale[i])*.28;
-    const s=dockScale[i];
-    d.el.style.transform=`translateY(${(-(s-1)*d.lift).toFixed(2)}px) scale(${s.toFixed(4)})`;
-    const grow=(s-1)*d.w*1.5;
-    if(d.el.closest('nav'))growSum+=grow*2;
-    d.el.style.marginLeft=(d.bml+grow).toFixed(2)+'px';
-    d.el.style.marginRight=(d.bmr+grow).toFixed(2)+'px';
-  });
-  headerBar.style.setProperty('--dockgrow',growSum.toFixed(1)+'px');
-  requestAnimationFrame(dockLoop);
-})();
+onPointerLeave(headerBar, function(){dockTarget.fill(1)});
+// Dock magnification — skip on touch-only devices to save battery
+const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+if(!isTouchDevice){
+  (function dockLoop(){
+    let growSum=0;
+    dockItems.forEach((d,i)=>{
+      dockScale[i]+=(dockTarget[i]-dockScale[i])*.28;
+      const s=dockScale[i];
+      d.el.style.transform=`translateY(${(-(s-1)*d.lift).toFixed(2)}px) scale(${s.toFixed(4)})`;
+      const grow=(s-1)*d.w*1.5;
+      if(d.el.closest('nav'))growSum+=grow*2;
+      d.el.style.marginLeft=(d.bml+grow).toFixed(2)+'px';
+      d.el.style.marginRight=(d.bmr+grow).toFixed(2)+'px';
+    });
+    headerBar.style.setProperty('--dockgrow',growSum.toFixed(1)+'px');
+    requestAnimationFrame(dockLoop);
+  })();
+}
 
 // Video section dips below the fixed navbar while scrolling up
 const visWrap=document.querySelector('.work-visual-wrap');
@@ -325,4 +355,6 @@ window.addEventListener('scroll',()=>{
 
 // Cursor
 const dot=document.querySelector('.cursor-dot');
-window.addEventListener('pointermove',e=>{if(dot){dot.style.left=e.clientX+'px';dot.style.top=e.clientY+'px';}});
+if(dot && window.matchMedia('(pointer:fine)').matches){
+  onPointerMove(document.documentElement,function(e){dot.style.left=e.clientX+'px';dot.style.top=e.clientY+'px';});
+}
