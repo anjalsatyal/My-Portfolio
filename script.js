@@ -60,7 +60,7 @@ function activate(index){
     else {v.pause();}
   });
   slideNo.textContent=String(index+1).padStart(2,'0')+' / 07';
-  if(!scrubbing){seek.value=0;paintSeek();playBtn.textContent='⏸';}
+  if(!scrubbing){seek.value=0;paintSeek();playBtn.textContent='⏸︎';}
 }
 activate(0);
 
@@ -118,9 +118,9 @@ function setSectionPlayback(visible){
   if(!visible){
     wasPlaying=!v.paused&&!v.ended;
     if(!v.paused)v.pause();
-    playBtn.textContent='▶';
+    playBtn.textContent='▶︎';
   }else{
-    if(wasPlaying){v.play().catch(()=>{});playBtn.textContent='⏸';}
+    if(wasPlaying){v.play().catch(()=>{});playBtn.textContent='⏸︎';}
   }
 }
 if(window.IntersectionObserver){
@@ -147,9 +147,9 @@ layers.forEach(l=>{
   });
   v.addEventListener('timeupdate',()=>{if(!scrubbing&&!v.seeking&&l.classList.contains('active')&&isFinite(v.duration)&&v.duration>0){seek.value=(v.currentTime/v.duration)*1000;paintSeek();}});
   v.addEventListener('seeked',()=>{if(l.classList.contains('active')&&isFinite(v.duration)){seek.value=(v.currentTime/v.duration)*1000;paintSeek();}});
-  v.addEventListener('ended',()=>{v.loop=true;if(l.classList.contains('active'))playBtn.textContent='▶';});
-  v.addEventListener('play',()=>{if(l.classList.contains('active'))playBtn.textContent='⏸';});
-  v.addEventListener('pause',()=>{if(l.classList.contains('active'))playBtn.textContent='▶';});
+  v.addEventListener('ended',()=>{v.loop=true;if(l.classList.contains('active'))playBtn.textContent='▶︎';});
+  v.addEventListener('play',()=>{if(l.classList.contains('active'))playBtn.textContent='⏸︎';});
+  v.addEventListener('pause',()=>{if(l.classList.contains('active'))playBtn.textContent='▶︎';});
 });
 playBtn.addEventListener('click',()=>{
   const v=activeVideo();if(!v)return;
