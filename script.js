@@ -303,25 +303,66 @@ function measureNav(){
 }
 if(document.fonts&&document.fonts.ready){document.fonts.ready.then(()=>requestAnimationFrame(()=>{measureNav();heroCompactPoint();}));}
 else{requestAnimationFrame(()=>{measureNav();heroCompactPoint();});}
-window.addEventListener('resize',()=>{measureNav();heroCompactPoint();kickHeader();},{passive:true});
-window.addEventListener('scroll',()=>{
-  const y=window.scrollY;
-  const delta=y-lastScrollY;
-  lastScrollY=y;
-  if(y<heroEnd){
-    if(delta<-3){upOverride=true;}
-    else if(delta>3&&y>0){upOverride=false;}
-    headerTarget=(upOverride||y<=0)?0:Math.min(1,y/heroEnd);
-  }else{
-    if(delta>3)dirTarget=1;
-    else if(delta<-3)dirTarget=0;
-    headerTarget=dirTarget;
-    if(delta>3)upOverride=false;
+window.addEventListener('resize',()=>{
+  if(window.innerWidth>900){
+    header.classList.remove('mobile-shrunk');
   }
+  measureNav();
+  heroCompactPoint();
   kickHeader();
 },{passive:true});
+
+window.addEventListener('scroll',()=>{
+  const rawY=window.scrollY;
+  const y=Math.max(0, rawY);
+  const delta=y-lastScrollY;
+  lastScrollY=y;
+
+  if(window.innerWidth<=900){
+    if(header.classList.contains('compact')){
+      header.classList.remove('compact');
+    }
+    if(y<=20){
+      if(header.classList.contains('mobile-shrunk')){
+        header.classList.remove('mobile-shrunk');
+      }
+    }else if(delta>4&&y>40){
+      if(!header.classList.contains('mobile-shrunk')){
+        header.classList.add('mobile-shrunk');
+        if(header.classList.contains('nav-open')){
+          header.classList.remove('nav-open');
+          const navToggle=header.querySelector('.nav-toggle');
+          if(navToggle) navToggle.setAttribute('aria-expanded','false');
+        }
+      }
+    }else if(delta<-4){
+      if(header.classList.contains('mobile-shrunk')){
+        header.classList.remove('mobile-shrunk');
+      }
+    }
+  }else{
+    if(header.classList.contains('mobile-shrunk')){
+      header.classList.remove('mobile-shrunk');
+    }
+    if(y<heroEnd){
+      if(delta<-3){upOverride=true;}
+      else if(delta>3&&y>0){upOverride=false;}
+      headerTarget=(upOverride||y<=0)?0:Math.min(1,y/heroEnd);
+    }else{
+      if(delta>3)dirTarget=1;
+      else if(delta<-3)dirTarget=0;
+      headerTarget=dirTarget;
+      if(delta>3)upOverride=false;
+    }
+    kickHeader();
+  }
+},{passive:true});
 heroCompactPoint();
-if(window.scrollY>=heroEnd){dirTarget=1;headerCur=headerTarget=1;}
+if(window.innerWidth<=900&&window.scrollY>40){
+  header.classList.add('mobile-shrunk');
+}else if(window.scrollY>=heroEnd){
+  dirTarget=1;headerCur=headerTarget=1;
+}
 headerFrame();
 
 // Fixed next-section button
