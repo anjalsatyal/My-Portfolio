@@ -29,6 +29,7 @@ const projectData = [
 
 const visualLayers = document.querySelector('#videoLayers');
 const slideNo = document.querySelector('#activeSlide');
+const mobileSlideNo = document.querySelector('#mobileActiveSlide');
 
 function makeLayer(index){
   const p=projectData[index];
@@ -65,7 +66,9 @@ function activate(index){
     if(active){v.play().catch(()=>{});}
     else {v.pause();}
   });
-  slideNo.textContent=String(index+1).padStart(2,'0')+' / 07';
+  const countText=String(index+1).padStart(2,'0')+' / 07';
+  if(slideNo) slideNo.textContent=countText;
+  if(mobileSlideNo) mobileSlideNo.textContent=countText;
   if(!scrubbing){seek.value=0;paintSeek();playBtn.textContent='⏸︎';}
 }
 activate(0);
@@ -197,38 +200,249 @@ seek.addEventListener('input',()=>{
 });
 
 const slides=[...document.querySelectorAll('.work-slide')];
-const isMobileStack=()=>window.matchMedia('(max-width:900px)').matches;
-function setActiveSlide(index,animate){
-  index=Math.max(0,Math.min(slides.length-1,index));
-  activate(index);
-  slides.forEach((s,i)=>{
-    const isActive=i===index;
-    s.classList.toggle('active-slide',isActive);
-    if(isActive&&animate){
-      s.classList.add('slide-enter');
-      requestAnimationFrame(()=>requestAnimationFrame(()=>s.classList.remove('slide-enter')));
-    }else if(isActive){
-      s.classList.remove('slide-enter');
-    }
-  });
-}
-setActiveSlide(0);
 
+// ── Track real header height so CSS sticky top stays accurate ──────────────
+const siteHeader=document.querySelector('.site-header');
+function updateHeaderHeight(){
+  if(siteHeader){
+    const h=siteHeader.getBoundingClientRect().height+
+             (parseInt(getComputedStyle(siteHeader).top)||0);
+    document.documentElement.style.setProperty('--header-h',Math.round(h)+'px');
+  }
+}
+updateHeaderHeight();
+window.addEventListener('resize',updateHeaderHeight,{passive:true});
+
+// ── Scroll-driven slide activation via IntersectionObserver ─────────────────
+// On mobile: when a slide enters the viewport below the sticky video, it becomes active.
+// On desktop: use the 55% threshold that already existed.
+function getVisualWrapHeight(){
+  return document.querySelector('.work-visual-wrap')?.offsetHeight||260;
+}
+
+let mobileObserver=null;
+function setupMobileObserver(){
+  if(mobileObserver){mobileObserver.disconnect();}
+  if(window.innerWidth>900){return;}
+  // rootMargin top = negative of header+video height so a slide is considered
+  // "in view" only when it scrolls up past the bottom edge of the sticky block.
+  const offset=-(getVisualWrapHeight()+16);
+  mobileObserver=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      const idx=Number(entry.target.dataset.index);
+      if(entry.isIntersecting){
+        activate(idx);
+        slides.forEach((s,i)=>s.classList.toggle('active-slide',i===idx));
+      }
+    });
+  },{
+    root:null,
+    rootMargin:`${offset}px 0px -20% 0px`,
+    threshold:0
+  });
+  slides.forEach(s=>mobileObserver.observe(s));
+}
+
+// Desktop IntersectionObserver (original behaviour)
 if(window.IntersectionObserver){
-  const observer=new IntersectionObserver(entries=>{
-    if(isMobileStack())return;
+  const desktopObserver=new IntersectionObserver(entries=>{
+    if(window.innerWidth<=900)return;
     entries.forEach(entry=>{if(entry.isIntersecting) activate(Number(entry.target.dataset.index));});
   },{root:null,threshold:.55});
-  slides.forEach(s=>observer.observe(s));
+  slides.forEach(s=>desktopObserver.observe(s));
 }
+
+activate(0);
+slides.forEach((s,i)=>s.classList.toggle('active-slide',i===0));
+setupMobileObserver();
+window.addEventListener('resize',setupMobileObserver,{passive:true});
+
+// ── scrollToSlide: jump video and scroll page ───────────────────────────────
+function scrollToSlide(idx){
+  idx=Math.max(0,Math.min(slides.length-1,idx));
+  activate(idx);
+  slides.forEach((s,i)=>s.classList.toggle('active-slide',i===idx));
+  if(slides[idx]){
+    const isMobile=window.innerWidth<=900;
+    const headerOffset=isMobile ? getVisualWrapHeight()+20 : 80;
+    const targetY=slides[idx].getBoundingClientRect().top+window.scrollY-headerOffset;
+    window.scrollTo({top:targetY,behavior:'smooth'});
+  }
+}
+
 document.querySelector('#prevSlide')?.addEventListener('click',()=>{
-  const i=layers.findIndex(l=>l.classList.contains('active'));
-  setActiveSlide(i-1,true);
+  const cur=layers.findIndex(l=>l.classList.contains('active'));
+  scrollToSlide(cur-1);
 });
 document.querySelector('#nextSlide')?.addEventListener('click',()=>{
-  const i=layers.findIndex(l=>l.classList.contains('active'));
-  setActiveSlide(i+1,true);
+  const cur=layers.findIndex(l=>l.classList.contains('active'));
+  scrollToSlide(cur+1);
 });
+document.querySelector('#overlayPrevBtn')?.addEventListener('click',()=>{
+  const cur=layers.findIndex(l=>l.classList.contains('active'));
+  scrollToSlide(cur-1);
+});
+document.querySelector('#overlayNextBtn')?.addEventListener('click',()=>{
+  const cur=layers.findIndex(l=>l.classList.contains('active'));
+  scrollToSlide(cur+1);
+});
+
+// Fullscreen custom buttons logic
+const fsBackBtn=document.querySelector('#fsBackBtn');
+if(fsBackBtn){
+  fsBackBtn.addEventListener('click',()=>{
+    const exit=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
+    if(exit) exit.call(document);
+  });
+}
+document.querySelector('#fsPrevBtn')?.addEventListener('click',()=>{
+  const cur=layers.findIndex(l=>l.classList.contains('active'));
+  scrollToSlide(cur-1);
+});
+document.querySelector('#fsNextBtn')?.addEventListener('click',()=>{
+  const cur=layers.findIndex(l=>l.classList.contains('active'));
+  scrollToSlide(cur+1);
+});
+
+// Big Play/Pause indicator logic
+const bigPlayPause=document.querySelector('#bigPlayPause');
+const bigPlayIcon=bigPlayPause?.querySelector('.icon');
+function updateBigPlayPause(v){
+  if(!bigPlayPause||!bigPlayIcon) return;
+  if(v.paused){
+    bigPlayIcon.textContent='▶︎';
+    bigPlayPause.classList.add('show');
+  }else{
+    bigPlayIcon.textContent='⏸︎';
+    bigPlayPause.classList.remove('show');
+  }
+}
+layers.forEach(l=>{
+  const v=l.querySelector('video');
+  v.addEventListener('play',()=>{if(l.classList.contains('active')) updateBigPlayPause(v);});
+  v.addEventListener('pause',()=>{if(l.classList.contains('active')) updateBigPlayPause(v);});
+});
+
+// Skip button — jump past all work slides to #services
+document.querySelector('#workSkipBtn')?.addEventListener('click',e=>{
+  e.preventDefault();
+  const target=document.querySelector('#services');
+  if(target) window.scrollTo({top:target.offsetTop,behavior:'smooth'});
+});
+
+// Mobile fullscreen button — makes the work-visual go fullscreen
+const mobileFsBtn=document.querySelector('#mobileFs');
+if(mobileFsBtn){
+  const fsEl=document.querySelector('#workVisual');
+  mobileFsBtn.addEventListener('click',()=>{
+    if(!fsEl) return;
+    const req=fsEl.requestFullscreen||fsEl.webkitRequestFullscreen||fsEl.mozRequestFullScreen||fsEl.msRequestFullscreen;
+    const exit=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
+    const isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement);
+    if(isFs()){
+      exit.call(document);
+    } else {
+      req.call(fsEl);
+    }
+  });
+  // Update icon when fullscreen state changes
+  const onFsChange=()=>{
+    const isFs=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement);
+    mobileFsBtn.textContent=isFs?'✕':'⛶';
+    mobileFsBtn.setAttribute('aria-label',isFs?'Exit fullscreen':'Fullscreen');
+  };
+  document.addEventListener('fullscreenchange',onFsChange);
+  document.addEventListener('webkitfullscreenchange',onFsChange);
+}
+
+// Touch swipe and center tap on video player for mobile
+const workVis=document.querySelector('.work-visual');
+let mobileControlsTimer=null;
+function showMobileScrubber(){
+  const ov=workVis?.querySelector('.visual-overlay');
+  if(!ov || window.innerWidth > 900) return;
+  ov.classList.add('mobile-show');
+  clearTimeout(mobileControlsTimer);
+  const v=activeVideo();
+  if(v && !v.paused){
+    mobileControlsTimer=setTimeout(()=>{
+      ov.classList.remove('mobile-show');
+    }, 2200);
+  }
+}
+
+function hideMobileScrubber(){
+  const ov=workVis?.querySelector('.visual-overlay');
+  if(!ov || window.innerWidth > 900) return;
+  clearTimeout(mobileControlsTimer);
+  ov.classList.remove('mobile-show');
+}
+
+if(workVis){
+  let touchStartX=0,touchStartY=0;
+  workVis.addEventListener('touchstart',e=>{
+    touchStartX=e.touches[0].clientX;
+    touchStartY=e.touches[0].clientY;
+  },{passive:true});
+  workVis.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-touchStartX;
+    const dy=e.changedTouches[0].clientY-touchStartY;
+    if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){
+      const cur=layers.findIndex(l=>l.classList.contains('active'));
+      if(dx<0&&cur<slides.length-1) scrollToSlide(cur+1);
+      else if(dx>0&&cur>0) scrollToSlide(cur-1);
+    }else if(Math.abs(dx)<10&&Math.abs(dy)<10&&window.innerWidth<=900){
+      // If user tapped on the seekbar itself, ignore play/pause toggle
+      if(e.target.closest('.video-seek')) return;
+      
+      const v=activeVideo();
+      if(v){
+        if(v.paused){
+          v.play().catch(()=>{});
+          hideMobileScrubber();
+        } else {
+          v.pause();
+          showMobileScrubber();
+        }
+      }
+    }
+  },{passive:true});
+}
+
+// Sync mobile scrubber with video play/pause events
+layers.forEach(l=>{
+  const v=l.querySelector('video');
+  v.addEventListener('play',()=>{
+    if(l.classList.contains('active') && window.innerWidth<=900){
+      hideMobileScrubber();
+    }
+  });
+  v.addEventListener('pause',()=>{
+    if(l.classList.contains('active') && window.innerWidth<=900){
+      showMobileScrubber();
+    }
+  });
+});
+
+
+// Mobile audio button — mirrors the desktop mute button state
+const mobileAudioBtn=document.querySelector('#mobileAudioBtn');
+if(mobileAudioBtn){
+  mobileAudioBtn.addEventListener('click',()=>{
+    soundOn=!soundOn;
+    layers.forEach(l=>{l.querySelector('video').muted=!soundOn;});
+    muteBtn.classList.toggle('on',soundOn);
+    mobileAudioBtn.classList.toggle('on',soundOn);
+    const v=activeVideo();
+    if(soundOn&&v&&v.paused){v.play().catch(()=>{});}
+  });
+}
+// Keep mobile audio button state in sync with desktop mute button
+// (fire after the main click handler has toggled soundOn)
+muteBtn.addEventListener('click',()=>{
+  setTimeout(()=>{if(mobileAudioBtn) mobileAudioBtn.classList.toggle('on',soundOn);},0);
+},{passive:true});
+
 
 // FAQ accordion
 const faqItems=[...document.querySelectorAll('.faq-item')];
@@ -261,6 +475,7 @@ faqItems.forEach(item=>{
 //   Zone 2 (everywhere else): pure scroll-DIRECTION trigger — down shrinks,
 //     up expands — animated with a fast ease-out glide.
 const header=document.querySelector('.site-header');
+const visWrap=document.querySelector('.work-visual-wrap');
 let headerRaf=0;
 let headerTarget=0;
 let headerCur=0;
@@ -278,9 +493,7 @@ function heroCompactPoint(){
 function headerFrame(){
   headerRaf=0;
   if(window.innerWidth<=900){
-    header.style.setProperty('--shrink','0');
-    header.classList.remove('compact');
-    return;
+    // Allow --shrink to animate on mobile as well!
   }
   const diff=headerTarget-headerCur;
   if(Math.abs(diff)>.0008){
@@ -295,11 +508,23 @@ function headerFrame(){
 function kickHeader(){if(!headerRaf)headerRaf=requestAnimationFrame(headerFrame);}
 function measureNav(){
   const nav=header.querySelector('nav');
-  if(!nav||window.innerWidth<=900)return;
-  const prev=nav.style.maxWidth;
-  nav.style.maxWidth='none';
-  header.style.setProperty('--navw',(Math.ceil(nav.getBoundingClientRect().width)+2)+'px');
-  nav.style.maxWidth=prev;
+  if(window.innerWidth<=900){
+    // On mobile, measure the CTA button so the shrink formula is exact
+    const cta=header.querySelector('.header-cta');
+    if(cta){
+      const ctaRect=cta.getBoundingClientRect();
+      // Include the header's left+right padding in the target width so nothing clips
+      const hStyle=getComputedStyle(header);
+      const pl=parseFloat(hStyle.paddingLeft)||18;
+      const pr=parseFloat(hStyle.paddingRight)||10;
+      header.style.setProperty('--ctaw',(Math.ceil(ctaRect.width)+pl+pr)+'px');
+    }
+    return;
+  }
+  const prev=nav?nav.style.maxWidth:null;
+  if(nav){nav.style.maxWidth='none';}
+  header.style.setProperty('--navw',(nav?Math.ceil(nav.getBoundingClientRect().width)+2:0)+'px');
+  if(nav){nav.style.maxWidth=prev;}
 }
 if(document.fonts&&document.fonts.ready){document.fonts.ready.then(()=>requestAnimationFrame(()=>{measureNav();heroCompactPoint();}));}
 else{requestAnimationFrame(()=>{measureNav();heroCompactPoint();});}
@@ -318,28 +543,39 @@ window.addEventListener('scroll',()=>{
   const delta=y-lastScrollY;
   lastScrollY=y;
 
+  // Sticky video wrap detection for smooth fade-in
+  if(visWrap){
+    const wrapRect=visWrap.getBoundingClientRect();
+    const isStuck = wrapRect.top <= (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 58) + 30;
+    visWrap.classList.toggle('is-stuck', isStuck && y > 100);
+    
+    // Video section dips/resizes smoothly below navbar while scrolling up
+    if (delta < -2 && y > 10) {
+      visWrap.classList.add('drop');
+    } else if (delta > 2 || y <= 10) {
+      visWrap.classList.remove('drop');
+    }
+  }
+
   if(window.innerWidth<=900){
-    if(header.classList.contains('compact')){
-      header.classList.remove('compact');
+    // Mobile navbar: scrub --shrink exactly like desktop
+    if(y < heroEnd){
+      if(delta < -3){ upOverride = true; }
+      else if(delta > 3 && y > 0){ upOverride = false; }
+      headerTarget = (upOverride || y <= 0) ? 0 : Math.min(1, y / heroEnd);
+    } else {
+      if(delta > 3) dirTarget = 1;
+      else if(delta < -3) dirTarget = 0;
+      headerTarget = dirTarget;
+      if(delta > 3) upOverride = false;
     }
-    if(y<=20){
-      if(header.classList.contains('mobile-shrunk')){
-        header.classList.remove('mobile-shrunk');
-      }
-    }else if(delta>4&&y>40){
-      if(!header.classList.contains('mobile-shrunk')){
-        header.classList.add('mobile-shrunk');
-        if(header.classList.contains('nav-open')){
-          header.classList.remove('nav-open');
-          const navToggle=header.querySelector('.nav-toggle');
-          if(navToggle) navToggle.setAttribute('aria-expanded','false');
-        }
-      }
-    }else if(delta<-4){
-      if(header.classList.contains('mobile-shrunk')){
-        header.classList.remove('mobile-shrunk');
-      }
+    // Close nav if fully shrunk
+    if(headerTarget >= 0.95 && header.classList.contains('nav-open')){
+      header.classList.remove('nav-open');
+      const navToggle=header.querySelector('.nav-toggle');
+      if(navToggle) navToggle.setAttribute('aria-expanded','false');
     }
+    kickHeader();
   }else{
     if(header.classList.contains('mobile-shrunk')){
       header.classList.remove('mobile-shrunk');
@@ -358,8 +594,8 @@ window.addEventListener('scroll',()=>{
   }
 },{passive:true});
 heroCompactPoint();
-if(window.innerWidth<=900&&window.scrollY>40){
-  header.classList.add('mobile-shrunk');
+if(window.innerWidth<=900 && window.scrollY > heroEnd*.5){
+  dirTarget=1; headerCur=headerTarget=1;
 }else if(window.scrollY>=heroEnd){
   dirTarget=1;headerCur=headerTarget=1;
 }
@@ -378,6 +614,27 @@ function syncScrollBtn(){
   if(!scrollBtn||!sections.length)return;
   const lastRect=sections[sections.length-1].getBoundingClientRect();
   scrollBtn.classList.toggle('up',lastRect.top<window.innerHeight*.6);
+
+  const rect=scrollBtn.getBoundingClientRect();
+  const btnCenterY=rect.top+rect.height/2;
+  const btnCenterX=rect.left+rect.width/2;
+
+  const darkEls=document.querySelectorAll('.dark-section, .site-footer, .reel-box, .work-video-box');
+  let isDark=false;
+  for(let i=0;i<darkEls.length;i++){
+    const dRect=darkEls[i].getBoundingClientRect();
+    if(
+      btnCenterY>=dRect.top &&
+      btnCenterY<=dRect.bottom &&
+      btnCenterX>=dRect.left &&
+      btnCenterX<=dRect.right
+    ){
+      isDark=true;
+      break;
+    }
+  }
+
+  scrollBtn.classList.toggle('is-dark-bg',isDark);
 }
 document.addEventListener('click',e=>{
   if(!e.target.closest('.scroll-next'))return;
@@ -406,16 +663,41 @@ document.querySelectorAll('a[href="#contact"]').forEach(a=>{
 // Mobile nav dropdown
 const headerBar=document.querySelector('.site-header');
 const navToggle=headerBar.querySelector('.nav-toggle');
+const mobileNav=headerBar.querySelector('nav');
+function closeMobileNav(){
+  if(!headerBar.classList.contains('nav-open'))return;
+  if(mobileNav){
+    mobileNav.classList.add('is-closing');
+    let done=false;
+    function finishClose(){
+      if(done)return;
+      done=true;
+      mobileNav.classList.remove('is-closing');
+      headerBar.classList.remove('nav-open');
+      navToggle&&navToggle.setAttribute('aria-expanded','false');
+    }
+    mobileNav.addEventListener('animationend',finishClose,{once:true});
+    // Fallback: force-close after 350ms in case animationend doesn't fire (iOS Safari)
+    setTimeout(finishClose,350);
+  } else {
+    headerBar.classList.remove('nav-open');
+    navToggle&&navToggle.setAttribute('aria-expanded','false');
+  }
+}
 if(navToggle){
   navToggle.addEventListener('click',()=>{
-    const open=headerBar.classList.toggle('nav-open');
-    navToggle.setAttribute('aria-expanded',open);
+    if(headerBar.classList.contains('nav-open')){
+      closeMobileNav();
+    } else {
+      headerBar.classList.add('nav-open');
+      navToggle.setAttribute('aria-expanded','true');
+    }
   });
   headerBar.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',()=>{
-    headerBar.classList.remove('nav-open');
-    navToggle.setAttribute('aria-expanded','false');
+    closeMobileNav();
   }));
 }
+
 
 // Dock-style magnification across the whole header (logo, nav links, CTA)
 const navLinks=[...headerBar.querySelectorAll('nav a')];
@@ -456,18 +738,66 @@ if(!isTouchDevice){
   })();
 }
 
-// Video section dips below the fixed navbar while scrolling up
-const visWrap=document.querySelector('.work-visual-wrap');
-let visLastY=window.scrollY;
-window.addEventListener('scroll',()=>{
-  const y=window.scrollY;
-  const dirUp=y<visLastY;
-  visLastY=y;
-  if(visWrap)visWrap.classList.toggle('drop',dirUp&&y>10);
-},{passive:true});
-
 // Cursor
 const dot=document.querySelector('.cursor-dot');
 if(dot && window.matchMedia('(pointer:fine)').matches){
   onPointerMove(document.documentElement,function(e){dot.style.left=e.clientX+'px';dot.style.top=e.clientY+'px';});
+}
+
+// ── Reel section: click to play/pause ──────────────────────────────────────
+const reelBox=document.querySelector('#reelBox');
+const reelVideo=document.querySelector('#reelVideo');
+const reelIndicator=document.querySelector('#reelPlayIndicator');
+const reelIcon=reelIndicator?.querySelector('.icon');
+let reelIndicatorTimer=null;
+
+function showReelIndicator(){
+  if(!reelIndicator||!reelIcon) return;
+  reelIcon.textContent=reelVideo.paused?'▶︎':'⏸︎';
+  reelIndicator.classList.add('show');
+  clearTimeout(reelIndicatorTimer);
+  // auto-hide after 1.5s if playing
+  if(!reelVideo.paused){
+    reelIndicatorTimer=setTimeout(()=>reelIndicator.classList.remove('show'),1500);
+  }
+}
+
+if(reelBox && reelVideo){
+  reelBox.addEventListener('click',e=>{
+    // ignore clicks on any child controls if any
+    if(reelVideo.paused){
+      reelVideo.play().catch(()=>{});
+    } else {
+      reelVideo.pause();
+    }
+    showReelIndicator();
+  });
+  reelVideo.addEventListener('pause',()=>{
+    if(reelIcon) reelIcon.textContent='▶︎';
+    if(reelIndicator) reelIndicator.classList.add('show');
+    clearTimeout(reelIndicatorTimer);
+  });
+  reelVideo.addEventListener('play',()=>{
+    showReelIndicator();
+  });
+}
+
+// ── Desktop work section: click on video to play/pause ─────────────────────
+// Only on desktop (pointer:fine). Mobile already has touch tap handler.
+if(window.matchMedia('(pointer:fine)').matches && stageEl){
+  stageEl.addEventListener('click',e=>{
+    // Ignore clicks on controls (buttons, seek bar)
+    if(e.target.closest('.visual-ctrl,.video-seek,#playBtn,#muteBtn,#fsBtn,#overlayPrevBtn,#overlayNextBtn')) return;
+    const v=activeVideo();
+    if(!v) return;
+    if(v.paused){ v.play().catch(()=>{}); } else { v.pause(); }
+    // show the big play/pause indicator
+    updateBigPlayPause(v);
+    const bpp=document.querySelector('#bigPlayPause');
+    if(bpp){
+      bpp.classList.add('show');
+      clearTimeout(window._bppTimer);
+      if(!v.paused) window._bppTimer=setTimeout(()=>bpp.classList.remove('show'),1200);
+    }
+  });
 }

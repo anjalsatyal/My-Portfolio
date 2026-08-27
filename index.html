@@ -12,9 +12,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Anjal Satyal — Graphic Designer &amp; Video Editor in Nepal</title>
   <link rel="canonical" href="https://www.anjalsatyal.com.np/">
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="assets/LOGO/LOGO%20ICON.png">
+  <link rel="apple-touch-icon" href="assets/LOGO/LOGO%20ICON.png">
 
   <meta property="og:type" content="profile">
   <meta property="og:site_name" content="Anjal Satyal">
@@ -53,9 +52,8 @@
         "alumniOf": "Tribhuvan University, IOE Pulchowk Campus",
         "knowsAbout": ["Video Editing", "Graphic Design", "Motion Graphics", "Video Production", "Brand Identity Design", "Color Grading", "Sound Design", "Social Media Content"],
         "sameAs": [
-          "https://www.linkedin.com/in/anjal-satyal-0849bb334/",
-          "https://www.instagram.com/anjalsatyal_/",
-          "https://wa.me/9779745332796"
+          "https://www.linkedin.com/in/anjalsatyal/",
+          "https://www.instagram.com/anjal.satyal/"
         ]
       },
       {
@@ -78,7 +76,7 @@
 <body>
   <div class="cursor-dot"></div>
   <header class="site-header">
-    <a class="logo" href="#top">AS<span>.</span></a>
+    <a class="logo" href="#top"><img src="assets/LOGO/LOGO%20ICON.png" alt="Anjal Satyal"></a>
     <nav><a href="#work">Work</a><a href="#services">Services</a><a href="assets/CV/Anjal%20Satyal%20%E2%80%94%20CV%20.pdf" target="_blank" rel="noopener noreferrer">CV</a><a href="#about">About</a><a href="#faq">FAQ</a></nav>
     <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
     <a class="header-cta" href="#contact"><span class="cta-label">Let's talk</span><span class="cta-arrow">↗︎</span></a>
@@ -94,7 +92,7 @@
 
     <section class="reel section-pad" aria-label="Showreel">
       <div class="section-label"><span>01</span> SHOWREEL</div>
-      <div class="reel-box"><video src="assets/PORTFOLIO/VIDEO 2.mp4" muted playsinline loop autoplay aria-label="Anjal Satyal showreel — video editing and motion graphics highlights"></video></div>
+      <div class="reel-box" id="reelBox"><video id="reelVideo" src="assets/PORTFOLIO/VIDEO 2.mp4" muted playsinline loop autoplay aria-label="Anjal Satyal showreel — video editing and motion graphics highlights"></video><div class="reel-play-indicator" id="reelPlayIndicator"><span class="icon">⏸︎</span></div></div>
     </section>
 
     <section id="work" class="work section-pad">
@@ -103,13 +101,28 @@
       <div class="selected-work">
         <div class="work-stage">
           <div class="work-visual-wrap">
+            <span class="slide-count-badge" id="mobileActiveSlide">01 / 07</span>
             <div class="stack-ghost stack-ghost-2" aria-hidden="true"></div>
             <div class="stack-ghost stack-ghost-1" aria-hidden="true"></div>
             <div class="work-visual" id="workVisual">
               <div class="work-video-box"><div id="videoLayers"></div></div>
-              <div class="visual-overlay"><div class="video-controls"><button type="button" class="visual-ctrl" id="playBtn" aria-label="Play or pause">⏸︎</button><input type="range" class="video-seek" id="videoSeek" min="0" max="1000" value="0" aria-label="Seek video"><button type="button" class="visual-ctrl" id="muteBtn" aria-label="Toggle sound"><img class="ctrl-icon icon-off" src="assets/icons/mute.png" alt="Muted"><img class="ctrl-icon icon-on" src="assets/icons/volume%20.png" alt="Sound on"></button><button type="button" class="visual-ctrl" id="fsBtn" aria-label="Fullscreen">⛶︎</button></div><span class="pill" id="activeSlide">01 / 07</span></div>
+              <div id="bigPlayPause" class="big-play-pause"><span class="icon">⏸︎</span></div>
+              <button id="fsBackBtn" class="fs-back-btn">← Back</button>
+              <div id="fsNavBtns" class="fs-nav-btns"><button id="fsPrevBtn" class="fs-nav-btn">‹ Prev</button><button id="fsNextBtn" class="fs-nav-btn">Next ›</button></div>
+              <div class="visual-overlay"><div class="video-controls"><button type="button" class="visual-ctrl" id="overlayPrevBtn" aria-label="Previous video">⏮</button><button type="button" class="visual-ctrl" id="playBtn" aria-label="Play or pause">⏸︎</button><button type="button" class="visual-ctrl" id="overlayNextBtn" aria-label="Next video">⏭</button><input type="range" class="video-seek" id="videoSeek" min="0" max="1000" value="0" aria-label="Seek video"><button type="button" class="visual-ctrl" id="muteBtn" aria-label="Toggle sound"><img class="ctrl-icon icon-off" src="assets/icons/mute.png" alt="Muted"><img class="ctrl-icon icon-on" src="assets/icons/volume%20.png" alt="Sound on"></button><button type="button" class="visual-ctrl" id="fsBtn" aria-label="Fullscreen">⛶︎</button></div><span class="pill" id="activeSlide">01 / 07</span></div>
             </div>
-            <div class="visual-nav"><button type="button" class="visual-nav-btn" id="prevSlide" aria-label="Previous project">‹</button><button type="button" class="visual-nav-btn" id="nextSlide" aria-label="Next project">›</button></div>
+          <div class="visual-nav">
+            <button type="button" class="visual-nav-btn" id="prevSlide" aria-label="Previous project">‹</button>
+            <button type="button" class="visual-nav-btn" id="nextSlide" aria-label="Next project">›</button>
+            <div class="visual-nav-sep" aria-hidden="true"></div>
+            <button type="button" class="work-fs-btn" id="mobileFs" aria-label="Fullscreen">⛶</button>
+            <button type="button" class="mobile-audio-btn" id="mobileAudioBtn" aria-label="Toggle sound">
+              <img class="ctrl-icon icon-off" src="assets/icons/mute.png" alt="Muted">
+              <img class="ctrl-icon icon-on" src="assets/icons/volume%20.png" alt="Sound on">
+            </button>
+            <div class="visual-nav-sep" aria-hidden="true"></div>
+            <a href="#services" class="work-skip-btn" id="workSkipBtn" aria-label="Skip to next section">Next section ↓</a>
+          </div>
           </div>
           <div class="work-copy">
             <article class="work-slide" data-index="0"><div class="work-slide-inner"><div class="slide-kicker"><span>Video Production</span><span>01</span></div><h3 class="slide-title">Stories that connect</h3><p class="slide-desc">My most recent work: a real-life story of Dhiraj Chhetri — from a BBS student to a DG Academy learner, and eventually a full-time graphic designer.<br><br>This documentary captures the journey, struggles, learning, and choices that shaped his path.</p><div class="slide-meta"><div><span>Role</span><span>Ideation · Scripting · Shooting · Editing · Color Grading · Sound Design · Text</span></div><div><span>Format</span><span>Commercial &amp; Social</span></div></div><a class="slide-link" href="#contact">Discuss a project ↗︎</a></div></article>
@@ -159,7 +172,7 @@
 
   <footer class="site-footer">
     <div class="footer-top"><span class="footer-brand">Let's make something good.</span><p class="footer-availability">Available for freelance, contract and full time work opportunities.</p><div class="footer-nav"><a href="https://www.linkedin.com/in/anjal-satyal-0849bb334/" target="_blank" rel="noopener noreferrer"><img class="social-icon" src="assets/icons/linkedin.png" alt="LinkedIn" loading="lazy"><span>LinkedIn</span></a><a href="https://wa.me/9779745332796" target="_blank" rel="noopener noreferrer"><img class="social-icon" src="assets/icons/whatsapp.png" alt="WhatsApp" loading="lazy"><span>WhatsApp</span></a><a href="https://www.instagram.com/anjalsatyal_/" target="_blank" rel="noopener noreferrer"><img class="social-icon" src="assets/icons/instagram.png" alt="Instagram" loading="lazy"><span>Instagram</span></a></div></div>
-    <div class="footer-bottom"><span>© 2026 Anjal Satyal</span><span>Video Production · Visual Design</span><a href="#top">Back to top ↑︎</a></div>
+    <div class="footer-bottom"><span>© 2026 Anjal Satyal</span><span>Video Production · Visual Design</span></div>
   </footer>
   <script src="script.js"></script>
 </body>
