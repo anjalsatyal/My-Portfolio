@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://anjalsatyal.com/sitemap.xml
+Sitemap: https://www.anjalsatyal.com.np/sitemap.xml

@@ -35,7 +35,7 @@ function makeLayer(index){
   const layer=document.createElement('div');
   layer.className='video-layer';
   layer.dataset.index=index;
-  layer.innerHTML=`<video muted playsinline loop preload="auto"><source src="${p.file}" type="video/mp4"></video><div class="video-fallback"><span class="fallback-no">${String(index+1).padStart(2,'0')}</span></div>`;
+  layer.innerHTML=`<video muted playsinline loop preload="metadata" aria-label="Anjal Satyal ${p.type} project — ${p.title}"><source src="${p.file}" type="video/mp4"></video><div class="video-fallback"><span class="fallback-no">${String(index+1).padStart(2,'0')}</span></div>`;
   visualLayers.appendChild(layer);
   const vid=layer.querySelector('video');
   vid.addEventListener('error',()=>{vid.style.display='none'});
@@ -50,13 +50,19 @@ let scrubbing=false;
 const seek=document.querySelector('#videoSeek');
 const playBtn=document.querySelector('#playBtn');
 function paintSeek(){const p=(seek.value/1000)*100;seek.style.background=`linear-gradient(90deg,#fff ${p}%,rgba(255,255,255,.28) ${p}%)`}
+function warmLayer(i){
+  const l=layers[i];if(!l)return;
+  const v=l.querySelector('video');
+  if(v.readyState===0&&v.preload!=='auto'){v.preload='auto';try{v.load();}catch(e){}}
+}
 function activate(index){
+  warmLayer(index);warmLayer(index-1);warmLayer(index+1);
   layers.forEach((l,i)=>{
     const active=i===index;
     l.classList.toggle('active',active);
     const v=l.querySelector('video');
     v.muted=!soundOn;
-    if(active){v.play().catch(()=>{});if(!isFinite(v.duration)||!v.duration){try{v.load();}catch(e){}}}
+    if(active){v.play().catch(()=>{});}
     else {v.pause();}
   });
   slideNo.textContent=String(index+1).padStart(2,'0')+' / 07';
@@ -155,6 +161,23 @@ playBtn.addEventListener('click',()=>{
   const v=activeVideo();if(!v)return;
   if(v.paused){v.play().catch(()=>{});}else{v.pause();}
 });
+
+// Auto-hide controls while a video is playing; reveal on hover/tap or when paused
+const stageEl=document.querySelector('#workVisual');
+let hideControlsTimer=null;
+function showControls(){
+  stageEl.classList.remove('controls-hidden');
+  clearTimeout(hideControlsTimer);
+  const v=activeVideo();
+  if(v&&!v.paused){hideControlsTimer=setTimeout(()=>stageEl.classList.add('controls-hidden'),1800);}
+}
+stageEl.addEventListener('pointermove',showControls);
+stageEl.addEventListener('pointerdown',showControls);
+layers.forEach(l=>{
+  const v=l.querySelector('video');
+  v.addEventListener('play',()=>{if(l.classList.contains('active'))showControls();});
+  v.addEventListener('pause',()=>{if(l.classList.contains('active')){clearTimeout(hideControlsTimer);stageEl.classList.remove('controls-hidden');}});
+});
 window.addEventListener('pointerup',()=>{scrubbing=false});
 window.addEventListener('touchend',()=>{scrubbing=false});
 seek.addEventListener('change',()=>{
@@ -174,12 +197,38 @@ seek.addEventListener('input',()=>{
 });
 
 const slides=[...document.querySelectorAll('.work-slide')];
+const isMobileStack=()=>window.matchMedia('(max-width:900px)').matches;
+function setActiveSlide(index,animate){
+  index=Math.max(0,Math.min(slides.length-1,index));
+  activate(index);
+  slides.forEach((s,i)=>{
+    const isActive=i===index;
+    s.classList.toggle('active-slide',isActive);
+    if(isActive&&animate){
+      s.classList.add('slide-enter');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>s.classList.remove('slide-enter')));
+    }else if(isActive){
+      s.classList.remove('slide-enter');
+    }
+  });
+}
+setActiveSlide(0);
+
 if(window.IntersectionObserver){
   const observer=new IntersectionObserver(entries=>{
+    if(isMobileStack())return;
     entries.forEach(entry=>{if(entry.isIntersecting) activate(Number(entry.target.dataset.index));});
   },{root:null,threshold:.55});
   slides.forEach(s=>observer.observe(s));
 }
+document.querySelector('#prevSlide')?.addEventListener('click',()=>{
+  const i=layers.findIndex(l=>l.classList.contains('active'));
+  setActiveSlide(i-1,true);
+});
+document.querySelector('#nextSlide')?.addEventListener('click',()=>{
+  const i=layers.findIndex(l=>l.classList.contains('active'));
+  setActiveSlide(i+1,true);
+});
 
 // FAQ accordion
 const faqItems=[...document.querySelectorAll('.faq-item')];
@@ -303,8 +352,31 @@ syncScrollBtn();
 window.addEventListener('scroll',syncScrollBtn,{passive:true});
 window.addEventListener('resize',syncScrollBtn,{passive:true});
 
-// Dock-style magnification across the whole header (logo, nav links, CTA)
+// "Let's talk" should always land at the very bottom of the page (contact + footer),
+// not just the top of #contact — anchor-scroll alone only reaches the bottom when
+// the viewport happens to be tall enough to clamp there.
+document.querySelectorAll('a[href="#contact"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});
+  });
+});
+
+// Mobile nav dropdown
 const headerBar=document.querySelector('.site-header');
+const navToggle=headerBar.querySelector('.nav-toggle');
+if(navToggle){
+  navToggle.addEventListener('click',()=>{
+    const open=headerBar.classList.toggle('nav-open');
+    navToggle.setAttribute('aria-expanded',open);
+  });
+  headerBar.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',()=>{
+    headerBar.classList.remove('nav-open');
+    navToggle.setAttribute('aria-expanded','false');
+  }));
+}
+
+// Dock-style magnification across the whole header (logo, nav links, CTA)
 const navLinks=[...headerBar.querySelectorAll('nav a')];
 const dockItems=[
   {el:headerBar.querySelector('.logo'),max:1.3,ox:'left bottom',lift:5},
