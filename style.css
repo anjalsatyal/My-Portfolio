@@ -157,7 +157,8 @@
 
 /* Hero marquee: previous companies */
 .hero-media{grid-column:2/3;grid-row:2/5;justify-self:end;align-self:center;width:100%;max-width:420px;display:flex;flex-direction:column}
-.hero-portrait{width:100%;aspect-ratio:610/469;object-fit:cover;border-radius:20px;background:var(--soft);box-shadow:0 40px 80px -24px rgba(17,17,17,.32),0 14px 28px -12px rgba(17,17,17,.16)}
+.hero-portrait{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:20px;background:var(--soft);box-shadow:0 40px 80px -24px rgba(17,17,17,.32),0 14px 28px -12px rgba(17,17,17,.16)}
+
 .hero-marquee{width:100%;margin-top:44px;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent);mask-image:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent)}
 .hero-marquee-track{display:flex;width:max-content;animation:hero-marquee 14s linear infinite}
 .hero-marquee-set{display:flex;align-items:center;gap:8px;padding-right:8px}
