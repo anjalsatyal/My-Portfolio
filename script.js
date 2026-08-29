@@ -801,3 +801,91 @@ if(window.matchMedia('(pointer:fine)').matches && stageEl){
     }
   });
 }
+
+// ── Scroll-triggered entrance animations ───────────────────────
+(function(){
+  document.documentElement.classList.add('anim-ready');
+  const animEls=document.querySelectorAll('.reel .section-label,.reel .reel-box,.work .section-label,.work .work-intro,.work-slide,.services .section-label,.services .service-row,.about .section-label,.about .about-grid h2,.about .about-copy p,.about .stats,.about .text-link,.faq .faq-head .section-label,.faq .faq-head h2,.faq .faq-head p,.faq .faq-item,.contact .section-label,.contact h2,.contact .email-link,.site-footer .footer-brand,.site-footer .footer-availability,.site-footer .footer-nav a,.site-footer .footer-bottom');
+  if(!animEls.length) return;
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting) e.target.classList.add('vis');
+      else e.target.classList.remove('vis');
+    });
+  },{threshold:0.01});
+  animEls.forEach(el=>io.observe(el));
+})();
+
+// ── Stat counter animation ─────────────────────────────────────
+(function(){
+  const counters=document.querySelectorAll('.stat strong[data-count]');
+  if(!counters.length) return;
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      const el=e.target;
+      if(!e.isIntersecting){
+        el.classList.remove('counting');
+        el.textContent='0';
+        return;
+      }
+      el.classList.add('counting');
+      const target=parseInt(el.dataset.count,10);
+      const duration=1800;
+      const start=performance.now();
+      function tick(now){
+        const elapsed=now-start;
+        const progress=Math.min(elapsed/duration,1);
+        const ease=1-Math.pow(1-progress,3);
+        const current=Math.round(target*ease);
+        el.textContent=current+'+';
+        if(progress<1) requestAnimationFrame(tick);
+        else el.classList.remove('counting');
+      }
+      requestAnimationFrame(tick);
+    });
+  },{threshold:0.5});
+  counters.forEach(el=>io.observe(el));
+})();
+
+// ── CTA pulse: pause on scroll up, resume on scroll down, pause at contact ──
+(function(){
+  const header=document.querySelector('.site-header');
+  if(!header) return;
+  let lastY=window.scrollY;
+  window.addEventListener('scroll',()=>{
+    const y=window.scrollY;
+    const delta=y-lastY;
+    lastY=y;
+    const ctaBtn=header.querySelector('.header-cta');
+    if(!ctaBtn) return;
+    const contactSection=document.getElementById('contact');
+    const contactInView=contactSection&&contactSection.getBoundingClientRect().top<window.innerHeight*0.8;
+    if(contactInView||delta<-1){
+      ctaBtn.classList.add('paused');
+    }else if(delta>1){
+      ctaBtn.classList.remove('paused');
+    }
+  },{passive:true});
+})();
+
+// ── Hero replay: re-trigger entrance animation on scroll back to top ─────
+(function(){
+  const hero=document.querySelector('.hero');
+  if(!hero)return;
+  document.body.classList.add('hero-replay');
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        document.body.classList.remove('hero-replay');
+        void document.body.offsetHeight;
+        document.body.classList.add('hero-replay');
+      }else{
+        document.body.classList.remove('hero-replay');
+      }
+    });
+  },{threshold:0.3});
+  io.observe(hero);
+})();
+
+// ── Email Compose Widget: DISABLED ─────────────────────────────
+// All email widget code commented out. Button uses plain mailto: link.
