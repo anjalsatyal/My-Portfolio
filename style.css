@@ -266,14 +266,16 @@
 
   /* iOS fake fullscreen fallback */
   .work-visual.ios-fs{
-    position:fixed!important;top:0!important;left:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;border-radius:0!important;z-index:9999!important;max-width:none!important;
+    position:fixed!important;top:0!important;left:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;border-radius:0!important;z-index:9999!important;max-width:none!important;margin:0!important;padding:0!important;aspect-ratio:auto!important;background:#000!important;
+  }
+  .work-visual.ios-fs .work-video-box{
+    position:absolute!important;inset:0!important;
   }
   .work-visual.ios-fs .visual-overlay{
     bottom:60px;
   }
   body.ios-fs-lock{
     overflow:hidden!important;
-    position:fixed;width:100%;
   }
 
   .work-visual .visual-overlay .video-seek{

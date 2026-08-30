@@ -85,14 +85,35 @@ muteBtn.addEventListener('click',()=>{
 });
 fsBtn.addEventListener('click',()=>{
   const stage=document.querySelector('#workVisual');
-  const activeFs=document.fullscreenElement||document.webkitFullscreenElement;
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const activeFs=document.fullscreenElement||document.webkitFullscreenElement||stage.classList.contains('ios-fs');
   if(activeFs){
-    if(document.exitFullscreen)document.exitFullscreen().catch(()=>{});
-    else if(document.webkitExitFullscreen)document.webkitExitFullscreen();
+    if(stage.classList.contains('ios-fs')){
+      stage.classList.remove('ios-fs');
+      document.body.classList.remove('ios-fs-lock');
+      stage.style.cssText='';
+      const wp=stage._fsParent,wn=stage._fsNext;
+      if(wp){if(wn)wp.insertBefore(stage,wn);else wp.appendChild(stage);}
+      stage._fsParent=stage._fsNext=null;
+    }else if(document.exitFullscreen){
+      document.exitFullscreen().catch(()=>{});
+    }else if(document.webkitExitFullscreen){
+      document.webkitExitFullscreen();
+    }
     return;
   }
-  if(stage.requestFullscreen){stage.requestFullscreen().catch(()=>{});}
-  else if(stage.webkitRequestFullscreen){stage.webkitRequestFullscreen();}
+  if(isIOS){
+    stage._fsParent=stage.parentNode;
+    stage._fsNext=stage.nextSibling;
+    stage.style.cssText='';
+    document.body.appendChild(stage);
+    stage.classList.add('ios-fs');
+    document.body.classList.add('ios-fs-lock');
+  }else if(stage.requestFullscreen){
+    stage.requestFullscreen().catch(()=>{});
+  }else if(stage.webkitRequestFullscreen){
+    stage.webkitRequestFullscreen();
+  }
 });
 const controlsBar=document.querySelector('.video-controls');
 function alignControls(){
@@ -335,14 +356,20 @@ const mobileFsBtn=document.querySelector('#mobileFs');
 if(mobileFsBtn){
   const fsEl=document.querySelector('#workVisual');
   const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  let fsParent=null;
+  let fsNextSibling=null;
   function isFullscreen(){
     return !!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement)||fsEl?.classList.contains('ios-fs');
   }
   function enterFs(){
     if(isIOS){
+      fsParent=fsEl.parentNode;
+      fsNextSibling=fsEl.nextSibling;
+      fsEl.style.cssText='';
+      document.body.appendChild(fsEl);
       fsEl.classList.add('ios-fs');
       document.body.classList.add('ios-fs-lock');
-      mobileFsBtn.textContent='✕';
+      mobileFsBtn.textContent='\u2715';
       mobileFsBtn.setAttribute('aria-label','Exit fullscreen');
       return;
     }
@@ -353,7 +380,14 @@ if(mobileFsBtn){
     if(isIOS){
       fsEl.classList.remove('ios-fs');
       document.body.classList.remove('ios-fs-lock');
-      mobileFsBtn.textContent='⛶';
+      fsEl.style.cssText='';
+      if(fsParent){
+        if(fsNextSibling) fsParent.insertBefore(fsEl,fsNextSibling);
+        else fsParent.appendChild(fsEl);
+      }
+      fsParent=null;
+      fsNextSibling=null;
+      mobileFsBtn.textContent='\u2315';
       mobileFsBtn.setAttribute('aria-label','Fullscreen');
       return;
     }
@@ -367,7 +401,7 @@ if(mobileFsBtn){
   const onFsChange=()=>{
     if(isIOS) return;
     const fs=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement);
-    mobileFsBtn.textContent=fs?'✕':'⛶';
+    mobileFsBtn.textContent=fs?'\u2715':'\u2315';
     mobileFsBtn.setAttribute('aria-label',fs?'Exit fullscreen':'Fullscreen');
   };
   document.addEventListener('fullscreenchange',onFsChange);
