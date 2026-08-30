@@ -334,22 +334,41 @@ document.querySelector('#workSkipBtn')?.addEventListener('click',e=>{
 const mobileFsBtn=document.querySelector('#mobileFs');
 if(mobileFsBtn){
   const fsEl=document.querySelector('#workVisual');
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  function isFullscreen(){
+    return !!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement)||fsEl?.classList.contains('ios-fs');
+  }
+  function enterFs(){
+    if(isIOS){
+      fsEl.classList.add('ios-fs');
+      document.body.classList.add('ios-fs-lock');
+      mobileFsBtn.textContent='✕';
+      mobileFsBtn.setAttribute('aria-label','Exit fullscreen');
+      return;
+    }
+    const req=fsEl.requestFullscreen||fsEl.webkitRequestFullscreen||fsEl.mozRequestFullScreen||fsEl.msRequestFullscreen;
+    if(req) req.call(fsEl);
+  }
+  function exitFs(){
+    if(isIOS){
+      fsEl.classList.remove('ios-fs');
+      document.body.classList.remove('ios-fs-lock');
+      mobileFsBtn.textContent='⛶';
+      mobileFsBtn.setAttribute('aria-label','Fullscreen');
+      return;
+    }
+    const exit=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
+    if(exit) exit.call(document);
+  }
   mobileFsBtn.addEventListener('click',()=>{
     if(!fsEl) return;
-    const req=fsEl.requestFullscreen||fsEl.webkitRequestFullscreen||fsEl.mozRequestFullScreen||fsEl.msRequestFullscreen;
-    const exit=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
-    const isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement);
-    if(isFs()){
-      exit.call(document);
-    } else {
-      req.call(fsEl);
-    }
+    if(isFullscreen()) exitFs(); else enterFs();
   });
-  // Update icon when fullscreen state changes
   const onFsChange=()=>{
-    const isFs=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement);
-    mobileFsBtn.textContent=isFs?'✕':'⛶';
-    mobileFsBtn.setAttribute('aria-label',isFs?'Exit fullscreen':'Fullscreen');
+    if(isIOS) return;
+    const fs=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement);
+    mobileFsBtn.textContent=fs?'✕':'⛶';
+    mobileFsBtn.setAttribute('aria-label',fs?'Exit fullscreen':'Fullscreen');
   };
   document.addEventListener('fullscreenchange',onFsChange);
   document.addEventListener('webkitfullscreenchange',onFsChange);

@@ -264,6 +264,18 @@
     bottom: 60px; /* shift up so nav buttons fit */
   }
 
+  /* iOS fake fullscreen fallback */
+  .work-visual.ios-fs{
+    position:fixed!important;top:0!important;left:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;border-radius:0!important;z-index:9999!important;max-width:none!important;
+  }
+  .work-visual.ios-fs .visual-overlay{
+    bottom:60px;
+  }
+  body.ios-fs-lock{
+    overflow:hidden!important;
+    position:fixed;width:100%;
+  }
+
   .work-visual .visual-overlay .video-seek{
     width:100%;
     max-width:100%;
