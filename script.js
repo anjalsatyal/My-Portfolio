@@ -1,944 +1,370 @@
-// Pointer / touch event helpers (iOS Safari < 13 fallback)
-function onPointerMove(el, fn) {
-  if (window.PointerEvent) {
-    el.addEventListener('pointermove', fn, { passive: true });
-  } else {
-    el.addEventListener('touchmove', function (e) {
-      fn({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
-    }, { passive: true });
+const projects=[{title:"Stories that connect",category:"Video Production",number:"01",role:"Ideation · Scripting · Shooting · Editing · Color Grading · Sound Design · Text",format:"Commercial & Social",file:"assets/PORTFOLIO/VIDEO 1.mp4",context:"A real-life story of Dhiraj Chhetri, from a BBS student to a DG Academy learner and eventually a full-time graphic designer.",process:"The piece follows the journey, struggles, learning and choices that shaped his path, with production and post handled as one continuous storytelling system."},{title:"Motion & Visual Storytelling",category:"Motion Graphics",number:"02",role:"Art Direction · Motion Graphics · Sound Design · Editing",format:"SaaS Campaigns",file:"assets/PORTFOLIO/VIDEO 2.mp4",context:"Motion used to simplify complex information and make ideas easier to understand.",process:"The visual language is kept focused so animation supports the message instead of overwhelming it."},{title:"Designed for the feed",category:"Social Content",number:"03",role:"Ideation · Script · Shoot · Editing",format:"Short-form · Social Media",file:"assets/PORTFOLIO/VIDEO 5.mp4",context:"The first video for Think Move Solution (TMS), created to introduce the agency, strengthen brand awareness and attract potential clients.",process:"From concept and scripting to production and post, the work shaped a visual language designed to stand out on fast-moving social platforms."},{title:"From idea to a full campaign",category:"Motion Graphics",number:"04",role:"Art Direction · Motion Graphics · Sound Design · Editing",format:"SaaS Campaigns",file:"assets/PORTFOLIO/VIDEO 6.mp4",context:"A motion graphics video recreated and refined into a clean, polished visual system. Animation, sound and editing work together to create a cohesive social-first piece.",process:"Art Direction · Motion Graphics · Sound Design · Editing"},{title:"Motion Graphics",category:"Integrated Campaign",number:"05",role:"Motion Design · Animation · Sound Design · Editing",format:"Motion Graphics · Social Media",file:"assets/PORTFOLIO/VIDEO 7.mp4",context:"A motion graphics video recreated and refined into a clean, polished visual system.",process:"Animation, sound and editing work together to create a cohesive social-first piece."}];
+const prefersReducedMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const header=document.querySelector(".site-header"),menuToggle=document.querySelector(".menu-toggle"),mobileMenu=document.querySelector(".mobile-menu"),cursor=document.querySelector(".cursor");
+function setMenu(open){document.body.classList.toggle("menu-open",open);mobileMenu?.classList.toggle("open",open);mobileMenu?.setAttribute("aria-hidden",String(!open));mobileMenu?.toggleAttribute("inert",!open);menuToggle?.setAttribute("aria-expanded",String(open));menuToggle?.setAttribute("aria-label",open?"Close menu":"Open menu")}
+menuToggle?.addEventListener("click",()=>setMenu(!document.body.classList.contains("menu-open")));mobileMenu?.querySelectorAll("a").forEach(link=>link.addEventListener("click",()=>setMenu(false)));
+document.querySelectorAll('a[href="#contact"]').forEach(link=>link.addEventListener("click",event=>{event.preventDefault();setMenu(false);if(location.hash!=="#contact")history.pushState(null,"","#contact");requestAnimationFrame(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:prefersReducedMotion?"auto":"smooth"}))}));
+window.addEventListener("keydown",event=>{if(event.key==="Escape"&&document.body.classList.contains("menu-open"))setMenu(false)});
+function onScroll(){header?.classList.toggle("scrolled",window.scrollY>80)}onScroll();window.addEventListener("scroll",onScroll,{passive:true});
+const siteNav=document.querySelector(".site-nav"),navLinks=[...siteNav?.querySelectorAll("a")||[]];
+if(siteNav&&navLinks.length){
+  const finePointer=window.matchMedia("(hover: hover) and (pointer: fine)");
+  const reducedMotion=window.matchMedia("(prefers-reduced-motion: reduce)");
+  const desktop=window.matchMedia("(min-width: 901px)");
+  const dockItems=[header.querySelector(".brand"),...navLinks,header.querySelector(".availability")].filter(Boolean);
+  const amplitudes=dockItems.map(item=>item.matches(".brand") ? .22 : item.matches(".availability") ? .16 : .8);
+  const scales=dockItems.map(()=>1);
+  let widths=[],dockFrame=0,pointerX=0,hovering=false,lastTime=0;
+  function measureDock(){
+    widths=dockItems.map(link=>link.closest(".site-nav")?link.querySelector("span").offsetWidth:link.offsetWidth);
   }
-}
-function onPointerLeave(el, fn) {
-  if (window.PointerEvent) {
-    el.addEventListener('pointerleave', fn);
-  } else {
-    el.addEventListener('touchend', fn);
-    el.addEventListener('touchcancel', fn);
+  measureDock();
+  document.fonts.ready.then(measureDock);
+  function startDock(){
+    if(!dockFrame){lastTime=performance.now();dockFrame=requestAnimationFrame(paintDock)}
   }
+  function resetDock(){
+    hovering=false;
+    startDock();
+  }
+  function paintDock(now){
+    dockFrame=0;
+    const enabled=finePointer.matches&&!reducedMotion.matches&&desktop.matches;
+    const linkCenters=dockItems.map(link=>{const bounds=link.getBoundingClientRect();return bounds.left+bounds.width/2});
+    // Map the pointer into item space so the crest stays beneath it as items spread.
+    let segment=0;
+    while(segment<linkCenters.length-2&&pointerX>linkCenters[segment+1])segment++;
+    const pointerPosition=segment+(pointerX-linkCenters[segment])/Math.max(1,linkCenters[segment+1]-linkCenters[segment]);
+    let growth=0,moving=false;
+    const blend=enabled?1-Math.exp(-Math.min(now-lastTime,64)/(hovering?65:100)):1;
+    lastTime=now;
+    dockItems.forEach((link,index)=>{
+      const distance=Math.abs(pointerPosition-index);
+      const influence=hovering&&enabled?(1+Math.cos(Math.PI*Math.min(distance/2.15,1)))/2:0;
+      const target=1+amplitudes[index]*Math.pow(influence,1.6);
+      scales[index]+=(target-scales[index])*blend;
+      if(Math.abs(target-scales[index])<.0005)scales[index]=target;
+      else moving=true;
+      const extra=widths[index]*(scales[index]-1);
+      link.style.setProperty("--dock-scale",scales[index].toFixed(4));
+      link.style.setProperty("--dock-lift",`${(-6.325*(scales[index]-1)/.8).toFixed(3)}px`);
+      link.style.setProperty("--dock-space",`${(extra/2).toFixed(3)}px`);
+      growth+=extra;
+    });
+    header?.style.setProperty("--dock-growth",`${growth.toFixed(3)}px`);
+    if(moving)dockFrame=requestAnimationFrame(paintDock);
+  }
+  header.addEventListener("pointermove",event=>{
+    if(event.pointerType!=="mouse"||!finePointer.matches||reducedMotion.matches||!desktop.matches||header.querySelector(":focus-visible"))return;
+    pointerX=event.clientX;
+    hovering=true;
+    startDock();
+  },{passive:true});
+  header.addEventListener("pointerleave",resetDock);
+  header.addEventListener("focusin",resetDock);
+  finePointer.addEventListener("change",resetDock);
+  reducedMotion.addEventListener("change",resetDock);
+  desktop.addEventListener("change",resetDock);
+  window.addEventListener("resize",()=>{measureDock();resetDock()});
+
+  const sections=navLinks.map(link=>({link,section:document.querySelector(link.getAttribute("href"))}));
+  function syncActiveSection(){
+    const position=window.scrollY+Math.min(window.innerHeight*.35,220);
+    let active=null,activeTop=-1;
+    sections.forEach(item=>{
+      if(item.section&&item.section.offsetTop<=position&&item.section.offsetTop>activeTop){
+        active=item.link;activeTop=item.section.offsetTop;
+      }
+    });
+    if(window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-2)active=navLinks[navLinks.length-1];
+    navLinks.forEach(link=>{
+      if(link===active)link.setAttribute("aria-current","location");
+      else link.removeAttribute("aria-current");
+    });
+  }
+  syncActiveSection();
+  window.addEventListener("scroll",syncActiveSection,{passive:true});
+  window.addEventListener("resize",syncActiveSection);
 }
-
-const projectData = [
-  {title:'Stories with a pulse.',kicker:'01 / Commercial & Social',desc:'Fast, intentional edits built for attention — from the first frame to the final CTA. This project represents my approach to rhythm, pacing, sound design and visual storytelling.',role:'Editing · Motion · Sound',type:'Video Production',file:'assets/PORTFOLIO/VIDEO 1.mp4'},
-  {title:'Ideas, in motion.',kicker:'02 / Motion Graphics',desc:'Motion is used to make information easier to understand and give a brand a distinct visual language without overwhelming the message.',role:'Art Direction · Motion',type:'Motion Graphics',file:'assets/PORTFOLIO/VIDEO 2.mp4'},
-  {title:'A visual identity that speaks.',kicker:'03 / Brand Campaign',desc:'A cohesive campaign system designed to work across social media, digital advertising and supporting brand communication.',role:'Design · Art Direction',type:'Graphic Design',file:'assets/PORTFOLIO/VIDEO 3.mp4'},
-  {title:'From brief to final frame.',kicker:'04 / Production',desc:'The strongest edits start before the camera rolls. I help shape the idea, plan the visual language and carry that thinking through post-production.',role:'Pre · Production · Post',type:'Video Production',file:'assets/PORTFOLIO/VIDEO 4.mp4'},
-  {title:'Designed for the feed.',kicker:'05 / Social Content',desc:'Short-form content that keeps the brand recognizable while adapting its visual language to fast-moving social platforms.',role:'Editing · Design · Motion',type:'Social Media',file:'assets/PORTFOLIO/VIDEO 5.mp4'},
-  {title:'Detail makes the difference.',kicker:'06 / Visual Design',desc:'Graphic systems, layouts and campaign assets where typography, composition and hierarchy do the heavy lifting.',role:'Graphic Design · Layout',type:'Visual Design',file:'assets/PORTFOLIO/VIDEO 6.mp4'},
-  {title:'One idea. Many formats.',kicker:'07 / Integrated Campaign',desc:'A complete creative system connecting video, motion and graphic design so every touchpoint feels like part of the same story.',role:'Creative Direction · Post',type:'Integrated Campaign',file:'assets/PORTFOLIO/VIDEO 7.mp4'}
-];
-
-const visualLayers = document.querySelector('#videoLayers');
-const slideNo = document.querySelector('#activeSlide');
-const mobileSlideNo = document.querySelector('#mobileActiveSlide');
-
-function makeLayer(index){
-  const p=projectData[index];
-  const layer=document.createElement('div');
-  layer.className='video-layer';
-  layer.dataset.index=index;
-  layer.innerHTML=`<video muted playsinline loop preload="metadata" aria-label="Anjal Satyal ${p.type} project — ${p.title}"><source src="${p.file}" type="video/mp4"></video><div class="video-fallback"><span class="fallback-no">${String(index+1).padStart(2,'0')}</span></div>`;
-  visualLayers.appendChild(layer);
-  const vid=layer.querySelector('video');
-  vid.addEventListener('error',()=>{vid.style.display='none'});
-  return layer;
-}
-projectData.forEach((_,i)=>makeLayer(i));
-const layers=[...document.querySelectorAll('.video-layer')];
-
-let soundOn=false;
-let pendingFraction=null;
-let scrubbing=false;
-const seek=document.querySelector('#videoSeek');
-const playBtn=document.querySelector('#playBtn');
-function paintSeek(){const p=(seek.value/1000)*100;seek.style.background=`linear-gradient(90deg,#fff ${p}%,rgba(255,255,255,.28) ${p}%)`}
-function warmLayer(i){
-  const l=layers[i];if(!l)return;
-  const v=l.querySelector('video');
-  if(v.readyState===0&&v.preload!=='auto'){v.preload='auto';try{v.load();}catch(e){}}
-}
-function activate(index){
-  warmLayer(index);warmLayer(index-1);warmLayer(index+1);
-  layers.forEach((l,i)=>{
-    const active=i===index;
-    l.classList.toggle('active',active);
-    const v=l.querySelector('video');
-    v.muted=!soundOn;
-    if(active){v.play().catch(()=>{});}
-    else {v.pause();}
+if(cursor&&window.matchMedia("(pointer:fine)").matches){window.addEventListener("pointermove",event=>{cursor.style.left=`${event.clientX}px`;cursor.style.top=`${event.clientY}px`},{passive:true})}
+const revealObserver="IntersectionObserver"in window&&!prefersReducedMotion?new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("in-view");revealObserver.unobserve(entry.target)}})},{threshold:.15}):null;
+if (revealObserver) {
+  document.querySelectorAll(".footer-contact,.footer-toolkit,.footer-bottom").forEach(element => {
+    element.classList.add("footer-reveal");
+    revealObserver.observe(element);
   });
-  const countText=String(index+1).padStart(2,'0')+' / 07';
-  if(slideNo) slideNo.textContent=countText;
-  if(mobileSlideNo) mobileSlideNo.textContent=countText;
-  if(!scrubbing){seek.value=0;paintSeek();playBtn.textContent='⏸︎';}
 }
-activate(0);
-
-const muteBtn=document.querySelector('#muteBtn');
-const fsBtn=document.querySelector('#fsBtn');
-const activeVideo=()=>layers.find(l=>l.classList.contains('active'))?.querySelector('video')||null;
-muteBtn.addEventListener('click',()=>{
-  soundOn=!soundOn;
-  layers.forEach(l=>{l.querySelector('video').muted=!soundOn;});
-  muteBtn.classList.toggle('on',soundOn);
-  const v=activeVideo();
-  if(soundOn&&v&&v.paused){v.play().catch(()=>{});}
-});
-fsBtn.addEventListener('click',()=>{
-  const stage=document.querySelector('#workVisual');
-  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  const activeFs=document.fullscreenElement||document.webkitFullscreenElement||stage.classList.contains('ios-fs');
-  if(activeFs){
-    if(stage.classList.contains('ios-fs')){
-      stage.classList.remove('ios-fs');
-      document.body.classList.remove('ios-fs-lock');
-      stage.style.cssText='';
-      const wp=stage._fsParent,wn=stage._fsNext;
-      if(wp){if(wn)wp.insertBefore(stage,wn);else wp.appendChild(stage);}
-      stage._fsParent=stage._fsNext=null;
-    }else if(document.exitFullscreen){
-      document.exitFullscreen().catch(()=>{});
-    }else if(document.webkitExitFullscreen){
-      document.webkitExitFullscreen();
-    }
-    return;
-  }
-  if(isIOS){
-    stage._fsParent=stage.parentNode;
-    stage._fsNext=stage.nextSibling;
-    stage.style.cssText='';
-    document.body.appendChild(stage);
-    stage.classList.add('ios-fs');
-    document.body.classList.add('ios-fs-lock');
-  }else if(stage.requestFullscreen){
-    stage.requestFullscreen().catch(()=>{});
-  }else if(stage.webkitRequestFullscreen){
-    stage.webkitRequestFullscreen();
-  }
-});
-const controlsBar=document.querySelector('.video-controls');
-function alignControls(){
-  const stage=document.querySelector('#workVisual');
-  const v=activeVideo();
-  if(window.innerWidth<=900||document.fullscreenElement===stage){stage.style.width='';stage.style.height='';stage.style.margin='';return;}
-  if(!v||!v.videoWidth||!v.videoHeight)return;
-  const CM=96/2.54,padX=CM,padTop=.61*CM,padBottom=.5*CM;
-  const controlsRow=document.querySelector('.visual-overlay');
-  const controlsH=(controlsRow?controlsRow.offsetHeight:0)+12;
-  const wrap=stage.parentElement;
-  const availW=wrap.clientWidth-padX*2,availH=wrap.clientHeight-padTop-padBottom-controlsH;
-  if(availW<=0||availH<=0)return;
-  const ar=v.videoWidth/v.videoHeight;
-  let w=availW,h=w/ar;
-  if(h>availH){h=availH;w=h*ar;}
-  stage.style.width=(w+padX*2)+'px';
-  stage.style.height=(h+padTop+padBottom+controlsH)+'px';
-  stage.style.margin='0 auto';
-}
-window.addEventListener('resize',alignControls);
-document.addEventListener('fullscreenchange',()=>{
-  const stage=document.querySelector('#workVisual');
-  if(document.fullscreenElement===stage){
-    stage.style.width='';stage.style.height='';stage.style.margin='';
-  }else{alignControls();}
-});
-
-let wasPlaying=false;
-function setSectionPlayback(visible){
-  const v=activeVideo();if(!v)return;
-  if(!visible){
-    wasPlaying=!v.paused&&!v.ended;
-    if(!v.paused)v.pause();
-    playBtn.textContent='▶︎';
-  }else{
-    if(wasPlaying){v.play().catch(()=>{});playBtn.textContent='⏸︎';}
-  }
-}
-if(window.IntersectionObserver){
-  new IntersectionObserver(entries=>{
-    entries.forEach(e=>setSectionPlayback(e.isIntersecting));
-  },{threshold:.05}).observe(document.querySelector('#work'));
-}
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden)setSectionPlayback(false);
-  else if(sectionInView)setSectionPlayback(true);
-});
-let sectionInView=true;
-if(window.IntersectionObserver){
-  new IntersectionObserver(entries=>{
-    entries.forEach(e=>{sectionInView=e.isIntersecting;});
-  },{threshold:.05}).observe(document.querySelector('#work'));
-}
-layers.forEach(l=>{
-  const v=l.querySelector('video');
-  v.addEventListener('loadedmetadata',()=>{
-    if(l.classList.contains('active')&&pendingFraction!=null&&isFinite(v.duration)){v.currentTime=pendingFraction*v.duration;pendingFraction=null;}
-    if(l.classList.contains('active')&&isFinite(v.duration)){seek.value=(v.currentTime/v.duration)*1000;paintSeek();}
-    if(l.classList.contains('active'))alignControls();
-  });
-  v.addEventListener('timeupdate',()=>{if(!scrubbing&&!v.seeking&&l.classList.contains('active')&&isFinite(v.duration)&&v.duration>0){seek.value=(v.currentTime/v.duration)*1000;paintSeek();}});
-  v.addEventListener('seeked',()=>{if(l.classList.contains('active')&&isFinite(v.duration)){seek.value=(v.currentTime/v.duration)*1000;paintSeek();}});
-  v.addEventListener('ended',()=>{v.loop=true;if(l.classList.contains('active'))playBtn.textContent='▶︎';});
-  v.addEventListener('play',()=>{if(l.classList.contains('active'))playBtn.textContent='⏸︎';});
-  v.addEventListener('pause',()=>{if(l.classList.contains('active'))playBtn.textContent='▶︎';});
-});
-playBtn.addEventListener('click',()=>{
-  const v=activeVideo();if(!v)return;
-  if(v.paused){v.play().catch(()=>{});}else{v.pause();}
-});
-
-// Auto-hide controls while a video is playing; reveal on hover/tap or when paused
-const stageEl=document.querySelector('#workVisual');
-let hideControlsTimer=null;
-function showControls(){
-  stageEl.classList.remove('controls-hidden');
-  clearTimeout(hideControlsTimer);
-  const v=activeVideo();
-  if(v&&!v.paused){hideControlsTimer=setTimeout(()=>stageEl.classList.add('controls-hidden'),1800);}
-}
-stageEl.addEventListener('pointermove',showControls);
-stageEl.addEventListener('pointerdown',showControls);
-layers.forEach(l=>{
-  const v=l.querySelector('video');
-  v.addEventListener('play',()=>{if(l.classList.contains('active'))showControls();});
-  v.addEventListener('pause',()=>{if(l.classList.contains('active')){clearTimeout(hideControlsTimer);stageEl.classList.remove('controls-hidden');}});
-});
-window.addEventListener('pointerup',()=>{scrubbing=false});
-window.addEventListener('touchend',()=>{scrubbing=false});
-seek.addEventListener('change',()=>{
-  scrubbing=false;
-  const frac=seek.value/1000;
-  const v=activeVideo();
-  if(v&&isFinite(v.duration)&&v.duration>0){v.currentTime=frac*v.duration;paintSeek();}
-});
-seek.addEventListener('pointerdown',()=>{scrubbing=true});
-seek.addEventListener('input',()=>{
-  const frac=(seek.value/1000);
-  const v=activeVideo();paintSeek();
-  if(!v)return;
-  if(frac>=.995&&v.loop)v.loop=false;
-  if(isFinite(v.duration)&&v.duration>0){v.currentTime=frac*v.duration;}
-  else{pendingFraction=frac;}
-});
-
-const slides=[...document.querySelectorAll('.work-slide')];
-
-// ── Track real header height so CSS sticky top stays accurate ──────────────
-const siteHeader=document.querySelector('.site-header');
-function updateHeaderHeight(){
-  if(siteHeader){
-    const h=siteHeader.getBoundingClientRect().height+
-             (parseInt(getComputedStyle(siteHeader).top)||0);
-    document.documentElement.style.setProperty('--header-h',Math.round(h)+'px');
-  }
-}
-updateHeaderHeight();
-window.addEventListener('resize',updateHeaderHeight,{passive:true});
-
-// ── Scroll-driven slide activation via IntersectionObserver ─────────────────
-// On mobile: when a slide enters the viewport below the sticky video, it becomes active.
-// On desktop: use the 55% threshold that already existed.
-function getVisualWrapHeight(){
-  return document.querySelector('.work-visual-wrap')?.offsetHeight||260;
-}
-
-let mobileObserver=null;
-function setupMobileObserver(){
-  if(mobileObserver){mobileObserver.disconnect();}
-  if(window.innerWidth>900){return;}
-  // rootMargin top = negative of header+video height so a slide is considered
-  // "in view" only when it scrolls up past the bottom edge of the sticky block.
-  const offset=-(getVisualWrapHeight()+16);
-  mobileObserver=new IntersectionObserver(entries=>{
+document.querySelectorAll(".section-head,.project-panel,.featured-copy,.featured-card,.motion-grid,.service-row,.about,.about-copy,.about-media,.training,.archive-link,.archive-intro,.archive-stat,.archive-tabs,.archive-card,.faq-item,.contact .overline,.contact h2,.contact p,.email-link,.stats div,.final-frame").forEach(el=>{if(revealObserver)revealObserver.observe(el);else el.classList.add("in-view")});
+const aboutPortrait=document.querySelector("[data-about-parallax]");
+function paintAboutParallax(){if(!aboutPortrait||prefersReducedMotion)return;const rect=aboutPortrait.getBoundingClientRect(),center=rect.top+rect.height/2-window.innerHeight/2,offset=Math.max(-18,Math.min(18,center*-0.035));aboutPortrait.style.setProperty("--about-parallax",`${offset}px`)}
+paintAboutParallax();window.addEventListener("scroll",paintAboutParallax,{passive:true});window.addEventListener("resize",paintAboutParallax);
+const reelVideo=document.querySelector("#reelVideo"),reelStage=document.querySelector(".reel-stage"),reelShell=document.querySelector(".reel-shell"),reelPlay=document.querySelector("#reelPlay"),reelMute=document.querySelector("#reelMute"),reelFullscreen=document.querySelector("#reelFullscreen"),reelTimeline=document.querySelector("#reelTimeline");
+let isReelScrubbing=false,hasPlayedUnmuted=false,lastScrollY=window.scrollY;
+function paintReelSeek(){if(!reelTimeline)return;const p=(Number(reelTimeline.value)||0)/10;reelTimeline.style.setProperty("--seek",`${p}%`);}
+function syncReelSeek(){if(!reelTimeline||!reelVideo||isReelScrubbing||!Number.isFinite(reelVideo.duration)||reelVideo.duration<=0)return;reelTimeline.value=Math.round((reelVideo.currentTime/reelVideo.duration)*1000);paintReelSeek();}
+function seekReel(){if(!reelTimeline||!reelVideo)return;const t=(Number(reelTimeline.value)||0)/1000;if(Number.isFinite(reelVideo.duration)&&reelVideo.duration>0){reelVideo.currentTime=t*reelVideo.duration;}paintReelSeek();}
+reelTimeline?.addEventListener("pointerdown",()=>{isReelScrubbing=true;});
+reelTimeline?.addEventListener("input",seekReel);
+reelTimeline?.addEventListener("change",()=>{seekReel();isReelScrubbing=false;});
+window.addEventListener("pointerup",()=>{if(isReelScrubbing){seekReel();isReelScrubbing=false;}});
+reelVideo?.addEventListener("timeupdate",syncReelSeek);
+reelVideo?.addEventListener("loadedmetadata",syncReelSeek);
+paintReelSeek();
+function syncReel(){if(!reelVideo||!reelStage||!reelPlay)return;reelStage.classList.toggle("playing",!reelVideo.paused);reelPlay.querySelector("span").textContent=reelVideo.paused?"Play":"Pause";reelPlay.setAttribute("aria-label",reelVideo.paused?"Play showreel":"Pause showreel");if(reelMute){const label=reelVideo.muted?"Turn showreel sound on":"Turn showreel sound off";reelMute.setAttribute("aria-label",label);reelMute.setAttribute("title",label);reelMute.setAttribute("aria-pressed",String(!reelVideo.muted));reelMute.querySelector("use").setAttribute("href",reelVideo.muted?"#icon-volume-off":"#icon-volume-on")}}
+reelPlay?.addEventListener("click",()=>{if(reelVideo.paused){reelVideo.play().catch(()=>{});reelStage.classList.remove("show-controls");}else{reelVideo.pause();reelStage.classList.add("show-controls");}syncReel();});
+reelStage?.addEventListener("click",event=>{if(event.target.closest("button, input"))return;if(reelVideo.paused){reelVideo.play().catch(()=>{});reelStage.classList.remove("show-controls");}else{reelVideo.pause();reelStage.classList.add("show-controls");}});
+reelVideo?.addEventListener("play",syncReel);
+reelVideo?.addEventListener("pause",syncReel);
+reelMute?.addEventListener("click",()=>{reelVideo.muted=!reelVideo.muted;syncReel();if(!reelVideo.paused)reelVideo.play().catch(()=>{});});
+reelFullscreen?.addEventListener("click",()=>{if(!reelShell)return;if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});else reelShell.requestFullscreen?.().catch(()=>{});});
+document.addEventListener("fullscreenchange",()=>{if(!reelFullscreen)return;const expanded=document.fullscreenElement===reelShell;reelFullscreen.setAttribute("aria-label",expanded?"Exit showreel fullscreen":"Open showreel fullscreen");reelFullscreen.setAttribute("title",expanded?"Exit fullscreen":"Fullscreen");reelFullscreen.querySelector("use").setAttribute("href",expanded?"#icon-exit-fullscreen":"#icon-fullscreen")});
+syncReel();
+if("IntersectionObserver" in window){
+  const showreelObserver=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
-      const idx=Number(entry.target.dataset.index);
+      const isScrollingDown = window.scrollY > lastScrollY;
       if(entry.isIntersecting){
-        activate(idx);
-        slides.forEach((s,i)=>s.classList.toggle('active-slide',i===idx));
-      }
-    });
-  },{
-    root:null,
-    rootMargin:`${offset}px 0px -20% 0px`,
-    threshold:0
-  });
-  slides.forEach(s=>mobileObserver.observe(s));
-}
-
-// Desktop IntersectionObserver (original behaviour)
-if(window.IntersectionObserver){
-  const desktopObserver=new IntersectionObserver(entries=>{
-    if(window.innerWidth<=900)return;
-    entries.forEach(entry=>{if(entry.isIntersecting) activate(Number(entry.target.dataset.index));});
-  },{root:null,threshold:.55});
-  slides.forEach(s=>desktopObserver.observe(s));
-}
-
-activate(0);
-slides.forEach((s,i)=>s.classList.toggle('active-slide',i===0));
-setupMobileObserver();
-window.addEventListener('resize',setupMobileObserver,{passive:true});
-
-// ── scrollToSlide: jump video and scroll page ───────────────────────────────
-function scrollToSlide(idx){
-  idx=Math.max(0,Math.min(slides.length-1,idx));
-  activate(idx);
-  slides.forEach((s,i)=>s.classList.toggle('active-slide',i===idx));
-  if(slides[idx]){
-    const isMobile=window.innerWidth<=900;
-    const headerOffset=isMobile ? getVisualWrapHeight()+20 : 80;
-    const targetY=slides[idx].getBoundingClientRect().top+window.scrollY-headerOffset;
-    window.scrollTo({top:targetY,behavior:'smooth'});
-  }
-}
-
-document.querySelector('#prevSlide')?.addEventListener('click',()=>{
-  const cur=layers.findIndex(l=>l.classList.contains('active'));
-  scrollToSlide(cur-1);
-});
-document.querySelector('#nextSlide')?.addEventListener('click',()=>{
-  const cur=layers.findIndex(l=>l.classList.contains('active'));
-  scrollToSlide(cur+1);
-});
-document.querySelector('#overlayPrevBtn')?.addEventListener('click',()=>{
-  const cur=layers.findIndex(l=>l.classList.contains('active'));
-  scrollToSlide(cur-1);
-});
-document.querySelector('#overlayNextBtn')?.addEventListener('click',()=>{
-  const cur=layers.findIndex(l=>l.classList.contains('active'));
-  scrollToSlide(cur+1);
-});
-
-// Fullscreen custom buttons logic
-const fsBackBtn=document.querySelector('#fsBackBtn');
-if(fsBackBtn){
-  fsBackBtn.addEventListener('click',()=>{
-    const exit=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
-    if(exit) exit.call(document);
-  });
-}
-document.querySelector('#fsPrevBtn')?.addEventListener('click',()=>{
-  const cur=layers.findIndex(l=>l.classList.contains('active'));
-  scrollToSlide(cur-1);
-});
-document.querySelector('#fsNextBtn')?.addEventListener('click',()=>{
-  const cur=layers.findIndex(l=>l.classList.contains('active'));
-  scrollToSlide(cur+1);
-});
-
-// Big Play/Pause indicator logic
-const bigPlayPause=document.querySelector('#bigPlayPause');
-const bigPlayIcon=bigPlayPause?.querySelector('.icon');
-function updateBigPlayPause(v){
-  if(!bigPlayPause||!bigPlayIcon) return;
-  if(v.paused){
-    bigPlayIcon.textContent='▶︎';
-    bigPlayPause.classList.add('show');
-  }else{
-    bigPlayIcon.textContent='⏸︎';
-    bigPlayPause.classList.remove('show');
-  }
-}
-layers.forEach(l=>{
-  const v=l.querySelector('video');
-  v.addEventListener('play',()=>{if(l.classList.contains('active')) updateBigPlayPause(v);});
-  v.addEventListener('pause',()=>{if(l.classList.contains('active')) updateBigPlayPause(v);});
-});
-
-// Skip button — jump past all work slides to #services
-document.querySelector('#workSkipBtn')?.addEventListener('click',e=>{
-  e.preventDefault();
-  const target=document.querySelector('#services');
-  if(target) window.scrollTo({top:target.offsetTop,behavior:'smooth'});
-});
-
-// Mobile fullscreen button — makes the work-visual go fullscreen
-const mobileFsBtn=document.querySelector('#mobileFs');
-if(mobileFsBtn){
-  const fsEl=document.querySelector('#workVisual');
-  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  let fsParent=null;
-  let fsNextSibling=null;
-  function isFullscreen(){
-    return !!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement)||fsEl?.classList.contains('ios-fs');
-  }
-  function enterFs(){
-    if(isIOS){
-      fsParent=fsEl.parentNode;
-      fsNextSibling=fsEl.nextSibling;
-      fsEl.style.cssText='';
-      document.body.appendChild(fsEl);
-      fsEl.classList.add('ios-fs');
-      document.body.classList.add('ios-fs-lock');
-      mobileFsBtn.textContent='\u2715';
-      mobileFsBtn.setAttribute('aria-label','Exit fullscreen');
-      return;
-    }
-    const req=fsEl.requestFullscreen||fsEl.webkitRequestFullscreen||fsEl.mozRequestFullScreen||fsEl.msRequestFullscreen;
-    if(req) req.call(fsEl);
-  }
-  function exitFs(){
-    if(isIOS){
-      fsEl.classList.remove('ios-fs');
-      document.body.classList.remove('ios-fs-lock');
-      fsEl.style.cssText='';
-      if(fsParent){
-        if(fsNextSibling) fsParent.insertBefore(fsEl,fsNextSibling);
-        else fsParent.appendChild(fsEl);
-      }
-      fsParent=null;
-      fsNextSibling=null;
-      mobileFsBtn.textContent='\u2315';
-      mobileFsBtn.setAttribute('aria-label','Fullscreen');
-      return;
-    }
-    const exit=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
-    if(exit) exit.call(document);
-  }
-  mobileFsBtn.addEventListener('click',()=>{
-    if(!fsEl) return;
-    if(isFullscreen()) exitFs(); else enterFs();
-  });
-  const onFsChange=()=>{
-    if(isIOS) return;
-    const fs=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement);
-    mobileFsBtn.textContent=fs?'\u2715':'\u2315';
-    mobileFsBtn.setAttribute('aria-label',fs?'Exit fullscreen':'Fullscreen');
-  };
-  document.addEventListener('fullscreenchange',onFsChange);
-  document.addEventListener('webkitfullscreenchange',onFsChange);
-}
-
-// Touch swipe and center tap on video player for mobile
-const workVis=document.querySelector('.work-visual');
-let mobileControlsTimer=null;
-function showMobileScrubber(){
-  const ov=workVis?.querySelector('.visual-overlay');
-  if(!ov || window.innerWidth > 900) return;
-  ov.classList.add('mobile-show');
-  clearTimeout(mobileControlsTimer);
-  const v=activeVideo();
-  if(v && !v.paused){
-    mobileControlsTimer=setTimeout(()=>{
-      ov.classList.remove('mobile-show');
-    }, 2200);
-  }
-}
-
-function hideMobileScrubber(){
-  const ov=workVis?.querySelector('.visual-overlay');
-  if(!ov || window.innerWidth > 900) return;
-  clearTimeout(mobileControlsTimer);
-  ov.classList.remove('mobile-show');
-}
-
-if(workVis){
-  let touchStartX=0,touchStartY=0;
-  workVis.addEventListener('touchstart',e=>{
-    touchStartX=e.touches[0].clientX;
-    touchStartY=e.touches[0].clientY;
-  },{passive:true});
-  workVis.addEventListener('touchend',e=>{
-    const dx=e.changedTouches[0].clientX-touchStartX;
-    const dy=e.changedTouches[0].clientY-touchStartY;
-    if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){
-      const cur=layers.findIndex(l=>l.classList.contains('active'));
-      if(dx<0&&cur<slides.length-1) scrollToSlide(cur+1);
-      else if(dx>0&&cur>0) scrollToSlide(cur-1);
-    }else if(Math.abs(dx)<10&&Math.abs(dy)<10&&window.innerWidth<=900){
-      // If user tapped on the seekbar itself, ignore play/pause toggle
-      if(e.target.closest('.video-seek')) return;
-      
-      const v=activeVideo();
-      if(v){
-        if(v.paused){
-          v.play().catch(()=>{});
-          hideMobileScrubber();
-        } else {
-          v.pause();
-          showMobileScrubber();
+        // Entering
+        if(isScrollingDown && !hasPlayedUnmuted){
+          // Scroll from hero (top) to showreel: autoplay video + audio enabled
+          reelVideo.muted=false;
+          reelVideo.play().catch(()=>{
+            reelVideo.muted=true;
+            reelVideo.play().catch(()=>{});
+          });
+          hasPlayedUnmuted=true;
+        }else{
+          // Scroll up or returning: autoplay video + audio off
+          reelVideo.muted=true;
+          if(reelVideo.paused) reelVideo.play().catch(()=>{});
         }
-      }
-    }
-  },{passive:true});
-}
-
-// Sync mobile scrubber with video play/pause events
-layers.forEach(l=>{
-  const v=l.querySelector('video');
-  v.addEventListener('play',()=>{
-    if(l.classList.contains('active') && window.innerWidth<=900){
-      hideMobileScrubber();
-    }
-  });
-  v.addEventListener('pause',()=>{
-    if(l.classList.contains('active') && window.innerWidth<=900){
-      showMobileScrubber();
-    }
-  });
-});
-
-
-// Mobile audio button — mirrors the desktop mute button state
-const mobileAudioBtn=document.querySelector('#mobileAudioBtn');
-if(mobileAudioBtn){
-  mobileAudioBtn.addEventListener('click',()=>{
-    soundOn=!soundOn;
-    layers.forEach(l=>{l.querySelector('video').muted=!soundOn;});
-    muteBtn.classList.toggle('on',soundOn);
-    mobileAudioBtn.classList.toggle('on',soundOn);
-    const v=activeVideo();
-    if(soundOn&&v&&v.paused){v.play().catch(()=>{});}
-  });
-}
-// Keep mobile audio button state in sync with desktop mute button
-// (fire after the main click handler has toggled soundOn)
-muteBtn.addEventListener('click',()=>{
-  setTimeout(()=>{if(mobileAudioBtn) mobileAudioBtn.classList.toggle('on',soundOn);},0);
-},{passive:true});
-
-
-// FAQ accordion
-const faqItems=[...document.querySelectorAll('.faq-item')];
-faqItems.forEach(item=>{
-  const btn=item.querySelector('.faq-button');
-  const answer=item.querySelector('.faq-answer');
-  if(item.classList.contains('open')){
-    btn.setAttribute('aria-expanded','true');
-    requestAnimationFrame(()=>{answer.style.height=answer.scrollHeight+'px';});
-  }
-  btn.addEventListener('click',()=>{
-    const isOpen=item.classList.contains('open');
-    faqItems.forEach(other=>{
-      other.classList.remove('open');
-      other.querySelector('.faq-answer').style.height='0px';
-      other.querySelector('.faq-button').setAttribute('aria-expanded','false');
-    });
-    if(!isOpen){
-      item.classList.add('open');
-      answer.style.height=answer.scrollHeight+'px';
-      btn.setAttribute('aria-expanded','true');
-    }
-  });
-});
-
-// Hybrid header behaviour:
-//   Zone 1 (Hero): the shrink value scrubs LINEARLY with scroll position —
-//     default at scrollY 0, fully compact the moment section two reaches the
-//     top of the viewport, reversing identically on the way back up.
-//   Zone 2 (everywhere else): pure scroll-DIRECTION trigger — down shrinks,
-//     up expands — animated with a fast ease-out glide.
-const header=document.querySelector('.site-header');
-const visWrap=document.querySelector('.work-visual-wrap');
-let headerRaf=0;
-let headerTarget=0;
-let headerCur=0;
-let lastScrollY=window.scrollY;
-let dirTarget=0;
-let heroEnd=1;
-let upOverride=false;
-function heroCompactPoint(){
-  const secs=[...document.querySelectorAll('main > section')];
-  if(secs.length>1){
-    const r=secs[1].getBoundingClientRect();
-    heroEnd=Math.max(60,r.top+window.scrollY);
-  }
-}
-function headerFrame(){
-  headerRaf=0;
-  if(window.innerWidth<=900){
-    // Allow --shrink to animate on mobile as well!
-  }
-  const diff=headerTarget-headerCur;
-  if(Math.abs(diff)>.0008){
-    headerCur+=diff*.13;
-    headerRaf=requestAnimationFrame(headerFrame);
-  }else{
-    headerCur=headerTarget;
-  }
-  header.style.setProperty('--shrink',headerCur.toFixed(4));
-  header.classList.toggle('compact',headerCur>.96);
-}
-function kickHeader(){if(!headerRaf)headerRaf=requestAnimationFrame(headerFrame);}
-function measureNav(){
-  const nav=header.querySelector('nav');
-  if(window.innerWidth<=900){
-    // On mobile, measure the CTA button so the shrink formula is exact
-    const cta=header.querySelector('.header-cta');
-    if(cta){
-      const ctaRect=cta.getBoundingClientRect();
-      // Include the header's left+right padding in the target width so nothing clips
-      const hStyle=getComputedStyle(header);
-      const pl=parseFloat(hStyle.paddingLeft)||18;
-      const pr=parseFloat(hStyle.paddingRight)||10;
-      header.style.setProperty('--ctaw',(Math.ceil(ctaRect.width)+pl+pr)+'px');
-    }
-    return;
-  }
-  const prev=nav?nav.style.maxWidth:null;
-  if(nav){nav.style.maxWidth='none';}
-  header.style.setProperty('--navw',(nav?Math.ceil(nav.getBoundingClientRect().width)+2:0)+'px');
-  if(nav){nav.style.maxWidth=prev;}
-}
-if(document.fonts&&document.fonts.ready){document.fonts.ready.then(()=>requestAnimationFrame(()=>{measureNav();heroCompactPoint();}));}
-else{requestAnimationFrame(()=>{measureNav();heroCompactPoint();});}
-window.addEventListener('resize',()=>{
-  if(window.innerWidth>900){
-    header.classList.remove('mobile-shrunk');
-  }
-  measureNav();
-  heroCompactPoint();
-  kickHeader();
-},{passive:true});
-
-window.addEventListener('scroll',()=>{
-  const rawY=window.scrollY;
-  const y=Math.max(0, rawY);
-  const delta=y-lastScrollY;
-  lastScrollY=y;
-
-  // Sticky video wrap detection for smooth fade-in
-  if(visWrap){
-    const wrapRect=visWrap.getBoundingClientRect();
-    const isStuck = wrapRect.top <= (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 58) + 30;
-    visWrap.classList.toggle('is-stuck', isStuck && y > 100);
-    
-    // Video section dips/resizes smoothly below navbar while scrolling up
-    if (delta < -2 && y > 10) {
-      visWrap.classList.add('drop');
-    } else if (delta > 2 || y <= 10) {
-      visWrap.classList.remove('drop');
-    }
-  }
-
-  if(window.innerWidth<=900){
-    // Mobile navbar: scrub --shrink exactly like desktop
-    if(y < heroEnd){
-      if(delta < -3){ upOverride = true; }
-      else if(delta > 3 && y > 0){ upOverride = false; }
-      headerTarget = (upOverride || y <= 0) ? 0 : Math.min(1, y / heroEnd);
-    } else {
-      if(delta > 3) dirTarget = 1;
-      else if(delta < -3) dirTarget = 0;
-      headerTarget = dirTarget;
-      if(delta > 3) upOverride = false;
-    }
-    // Close nav if fully shrunk
-    if(headerTarget >= 0.95 && header.classList.contains('nav-open')){
-      header.classList.remove('nav-open');
-      const navToggle=header.querySelector('.nav-toggle');
-      if(navToggle) navToggle.setAttribute('aria-expanded','false');
-    }
-    kickHeader();
-  }else{
-    if(header.classList.contains('mobile-shrunk')){
-      header.classList.remove('mobile-shrunk');
-    }
-    if(y<heroEnd){
-      if(delta<-3){upOverride=true;}
-      else if(delta>3&&y>0){upOverride=false;}
-      headerTarget=(upOverride||y<=0)?0:Math.min(1,y/heroEnd);
-    }else{
-      if(delta>3)dirTarget=1;
-      else if(delta<-3)dirTarget=0;
-      headerTarget=dirTarget;
-      if(delta>3)upOverride=false;
-    }
-    kickHeader();
-  }
-},{passive:true});
-heroCompactPoint();
-if(window.innerWidth<=900 && window.scrollY > heroEnd*.5){
-  dirTarget=1; headerCur=headerTarget=1;
-}else if(window.scrollY>=heroEnd){
-  dirTarget=1;headerCur=headerTarget=1;
-}
-headerFrame();
-
-// Fixed next-section button
-const sections=[...document.querySelectorAll('main > section')];
-const scrollBtn=document.querySelector('.scroll-next');
-function currentSectionIndex(){
-  const probe=window.scrollY+window.innerHeight*.5;
-  let idx=0;
-  sections.forEach((s,i)=>{if(s.offsetTop<=probe)idx=i;});
-  return idx;
-}
-function syncScrollBtn(){
-  if(!scrollBtn||!sections.length)return;
-  const lastRect=sections[sections.length-1].getBoundingClientRect();
-  scrollBtn.classList.toggle('up',lastRect.top<window.innerHeight*.6);
-
-  const rect=scrollBtn.getBoundingClientRect();
-  const btnCenterY=rect.top+rect.height/2;
-  const btnCenterX=rect.left+rect.width/2;
-
-  const darkEls=document.querySelectorAll('.dark-section, .site-footer, .reel-box, .work-video-box');
-  let isDark=false;
-  for(let i=0;i<darkEls.length;i++){
-    const dRect=darkEls[i].getBoundingClientRect();
-    if(
-      btnCenterY>=dRect.top &&
-      btnCenterY<=dRect.bottom &&
-      btnCenterX>=dRect.left &&
-      btnCenterX<=dRect.right
-    ){
-      isDark=true;
-      break;
-    }
-  }
-
-  scrollBtn.classList.toggle('is-dark-bg',isDark);
-}
-document.addEventListener('click',e=>{
-  if(!e.target.closest('.scroll-next'))return;
-  e.preventDefault();
-  if(scrollBtn.classList.contains('up')){
-    window.scrollTo({top:0,behavior:'smooth'});
-    return;
-  }
-  const target=sections[Math.min(currentSectionIndex()+1,sections.length-1)];
-  if(target)window.scrollTo({top:target.offsetTop,behavior:'smooth'});
-});
-syncScrollBtn();
-window.addEventListener('scroll',syncScrollBtn,{passive:true});
-window.addEventListener('resize',syncScrollBtn,{passive:true});
-
-// "Let's talk" should always land at the very bottom of the page (contact + footer),
-// not just the top of #contact — anchor-scroll alone only reaches the bottom when
-// the viewport happens to be tall enough to clamp there.
-document.querySelectorAll('a[href="#contact"]').forEach(a=>{
-  a.addEventListener('click',e=>{
-    e.preventDefault();
-    window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});
-  });
-});
-
-// Mobile nav dropdown
-const headerBar=document.querySelector('.site-header');
-const navToggle=headerBar.querySelector('.nav-toggle');
-const mobileNav=headerBar.querySelector('nav');
-function closeMobileNav(){
-  if(!headerBar.classList.contains('nav-open'))return;
-  if(mobileNav){
-    mobileNav.classList.add('is-closing');
-    let done=false;
-    function finishClose(){
-      if(done)return;
-      done=true;
-      mobileNav.classList.remove('is-closing');
-      headerBar.classList.remove('nav-open');
-      navToggle&&navToggle.setAttribute('aria-expanded','false');
-    }
-    mobileNav.addEventListener('animationend',finishClose,{once:true});
-    // Fallback: force-close after 350ms in case animationend doesn't fire (iOS Safari)
-    setTimeout(finishClose,350);
-  } else {
-    headerBar.classList.remove('nav-open');
-    navToggle&&navToggle.setAttribute('aria-expanded','false');
-  }
-}
-if(navToggle){
-  navToggle.addEventListener('click',()=>{
-    if(headerBar.classList.contains('nav-open')){
-      closeMobileNav();
-    } else {
-      headerBar.classList.add('nav-open');
-      navToggle.setAttribute('aria-expanded','true');
-    }
-  });
-  headerBar.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',()=>{
-    closeMobileNav();
-  }));
-}
-
-
-// Dock-style magnification across the whole header (logo, nav links, CTA)
-const navLinks=[...headerBar.querySelectorAll('nav a')];
-const dockItems=[
-  {el:headerBar.querySelector('.logo'),max:1.3,ox:'left bottom',lift:5},
-  ...navLinks.map(a=>({el:a,max:1.4,ox:'center bottom',lift:7})),
-  {el:headerBar.querySelector('.header-cta'),max:1.15,ox:'center bottom',lift:4}
-].filter(d=>d.el);
-const dockScale=dockItems.map(()=>1);
-const dockTarget=dockItems.map(()=>1);
-dockItems.forEach(d=>{d.el.style.transformOrigin=d.ox;d.w=d.el.offsetWidth;const cs=getComputedStyle(d.el);d.bml=parseFloat(cs.marginLeft)||0;d.bmr=parseFloat(cs.marginRight)||0;});
-onPointerMove(headerBar, function(e){
-  const R=95;
-  dockItems.forEach((d,i)=>{
-    const r=d.el.getBoundingClientRect();
-    const dxc=e.clientX-(r.left+r.width/2),dyc=e.clientY-(r.top+r.height/2);
-    const dist=Math.hypot(dxc,dyc*.6);
-    dockTarget[i]=dist>=R?1:1+(d.max-1)*Math.pow(Math.cos(Math.min(dist/R,1)*Math.PI/2),2);
-  });
-});
-onPointerLeave(headerBar, function(){dockTarget.fill(1)});
-// Dock magnification — skip on touch-only devices to save battery
-const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-if(!isTouchDevice){
-  (function dockLoop(){
-    let growSum=0;
-    dockItems.forEach((d,i)=>{
-      dockScale[i]+=(dockTarget[i]-dockScale[i])*.28;
-      const s=dockScale[i];
-      d.el.style.transform=`translateY(${(-(s-1)*d.lift).toFixed(2)}px) scale(${s.toFixed(4)})`;
-      const grow=(s-1)*d.w*1.5;
-      if(d.el.closest('nav'))growSum+=grow*2;
-      d.el.style.marginLeft=(d.bml+grow).toFixed(2)+'px';
-      d.el.style.marginRight=(d.bmr+grow).toFixed(2)+'px';
-    });
-    headerBar.style.setProperty('--dockgrow',growSum.toFixed(1)+'px');
-    requestAnimationFrame(dockLoop);
-  })();
-}
-
-// Cursor
-const dot=document.querySelector('.cursor-dot');
-if(dot && window.matchMedia('(pointer:fine)').matches){
-  onPointerMove(document.documentElement,function(e){dot.style.left=e.clientX+'px';dot.style.top=e.clientY+'px';});
-}
-
-// ── Reel section: click to play/pause ──────────────────────────────────────
-const reelBox=document.querySelector('#reelBox');
-const reelVideo=document.querySelector('#reelVideo');
-const reelIndicator=document.querySelector('#reelPlayIndicator');
-const reelIcon=reelIndicator?.querySelector('.icon');
-let reelIndicatorTimer=null;
-
-function showReelIndicator(){
-  if(!reelIndicator||!reelIcon) return;
-  reelIcon.textContent=reelVideo.paused?'▶︎':'⏸︎';
-  reelIndicator.classList.add('show');
-  clearTimeout(reelIndicatorTimer);
-  // auto-hide after 1.5s if playing
-  if(!reelVideo.paused){
-    reelIndicatorTimer=setTimeout(()=>reelIndicator.classList.remove('show'),1500);
-  }
-}
-
-if(reelBox && reelVideo){
-  reelBox.addEventListener('click',e=>{
-    // ignore clicks on any child controls if any
-    if(reelVideo.paused){
-      reelVideo.play().catch(()=>{});
-    } else {
-      reelVideo.pause();
-    }
-    showReelIndicator();
-  });
-  reelVideo.addEventListener('pause',()=>{
-    if(reelIcon) reelIcon.textContent='▶︎';
-    if(reelIndicator) reelIndicator.classList.add('show');
-    clearTimeout(reelIndicatorTimer);
-  });
-  reelVideo.addEventListener('play',()=>{
-    showReelIndicator();
-  });
-}
-
-// ── Desktop work section: click on video to play/pause ─────────────────────
-// Only on desktop (pointer:fine). Mobile already has touch tap handler.
-if(window.matchMedia('(pointer:fine)').matches && stageEl){
-  stageEl.addEventListener('click',e=>{
-    // Ignore clicks on controls (buttons, seek bar)
-    if(e.target.closest('.visual-ctrl,.video-seek,#playBtn,#muteBtn,#fsBtn,#overlayPrevBtn,#overlayNextBtn')) return;
-    const v=activeVideo();
-    if(!v) return;
-    if(v.paused){ v.play().catch(()=>{}); } else { v.pause(); }
-    // show the big play/pause indicator
-    updateBigPlayPause(v);
-    const bpp=document.querySelector('#bigPlayPause');
-    if(bpp){
-      bpp.classList.add('show');
-      clearTimeout(window._bppTimer);
-      if(!v.paused) window._bppTimer=setTimeout(()=>bpp.classList.remove('show'),1200);
-    }
-  });
-}
-
-// ── Scroll-triggered entrance animations ───────────────────────
-(function(){
-  document.documentElement.classList.add('anim-ready');
-  const animEls=document.querySelectorAll('.reel .section-label,.reel .reel-box,.work .section-label,.work .work-intro,.work-slide,.services .section-label,.services .service-row,.about .section-label,.about .about-grid h2,.about .about-copy p,.about .stats,.about .text-link,.faq .faq-head .section-label,.faq .faq-head h2,.faq .faq-head p,.faq .faq-item,.contact .section-label,.contact h2,.contact .email-link,.site-footer .footer-brand,.site-footer .footer-availability,.site-footer .footer-nav a,.site-footer .footer-bottom');
-  if(!animEls.length) return;
-  const io=new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting) e.target.classList.add('vis');
-      else e.target.classList.remove('vis');
-    });
-  },{threshold:0.01});
-  animEls.forEach(el=>io.observe(el));
-})();
-
-// ── Stat counter animation ─────────────────────────────────────
-(function(){
-  const counters=document.querySelectorAll('.stat strong[data-count]');
-  if(!counters.length) return;
-  const io=new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{
-      const el=e.target;
-      if(!e.isIntersecting){
-        el.classList.remove('counting');
-        el.textContent='0';
-        return;
-      }
-      el.classList.add('counting');
-      const target=parseInt(el.dataset.count,10);
-      const duration=1800;
-      const start=performance.now();
-      function tick(now){
-        const elapsed=now-start;
-        const progress=Math.min(elapsed/duration,1);
-        const ease=1-Math.pow(1-progress,3);
-        const current=Math.round(target*ease);
-        el.textContent=current+'+';
-        if(progress<1) requestAnimationFrame(tick);
-        else el.classList.remove('counting');
-      }
-      requestAnimationFrame(tick);
-    });
-  },{threshold:0.5});
-  counters.forEach(el=>io.observe(el));
-})();
-
-// ── CTA pulse: pause on scroll up, resume on scroll down, pause at contact ──
-(function(){
-  const header=document.querySelector('.site-header');
-  if(!header) return;
-  let lastY=window.scrollY;
-  window.addEventListener('scroll',()=>{
-    const y=window.scrollY;
-    const delta=y-lastY;
-    lastY=y;
-    const ctaBtn=header.querySelector('.header-cta');
-    if(!ctaBtn) return;
-    const contactSection=document.getElementById('contact');
-    const contactInView=contactSection&&contactSection.getBoundingClientRect().top<window.innerHeight*0.8;
-    if(contactInView||delta<-1){
-      ctaBtn.classList.add('paused');
-    }else if(delta>1){
-      ctaBtn.classList.remove('paused');
-    }
-  },{passive:true});
-})();
-
-// ── Hero replay: re-trigger entrance animation on scroll back to top ─────
-(function(){
-  const hero=document.querySelector('.hero');
-  if(!hero)return;
-  document.body.classList.add('hero-replay');
-  const io=new IntersectionObserver(entries=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting){
-        document.body.classList.remove('hero-replay');
-        void document.body.offsetHeight;
-        document.body.classList.add('hero-replay');
       }else{
-        document.body.classList.remove('hero-replay');
+        // Leaving: auto pause and turn audio off
+        reelVideo.pause();
+        reelVideo.muted=true;
       }
+      syncReel();
     });
-  },{threshold:0.3});
-  io.observe(hero);
-})();
+  },{threshold:0.4});
+  if(reelStage)showreelObserver.observe(reelStage);
+}
+window.addEventListener("scroll", () => { lastScrollY = window.scrollY; }, {passive: true});
+const projectLayers=document.querySelector("#projectLayers"),projectCounter=document.querySelector("#projectCounter"),projectSeek=document.querySelector("#projectSeek"),projectPanels=[...document.querySelectorAll(".project-panel")];let activeProject=0,projectSound=false,isProjectScrubbing=false;
+projects.forEach((project,index)=>{const layer=document.createElement("div");layer.className="project-layer";layer.dataset.index=index;layer.innerHTML=`<video muted playsinline loop preload="${index===0?"metadata":"none"}"><source src="${project.file}" type="video/mp4"></video>`;projectLayers?.appendChild(layer)});
+const layers=[...document.querySelectorAll(".project-layer")],activeVideo=()=>layers[activeProject]?.querySelector("video");
+function paintProjectSeek(){if(!projectSeek)return;const progress=(Number(projectSeek.value)||0)/10;projectSeek.style.setProperty("--seek",`${progress}%`)}
+function syncProjectSeek(){const video=activeVideo();if(!projectSeek||!video||isProjectScrubbing||!Number.isFinite(video.duration)||video.duration<=0)return;projectSeek.value=Math.round((video.currentTime/video.duration)*1000);paintProjectSeek()}
+function seekActiveProject(){const video=activeVideo();if(!projectSeek||!video)return;const target=(Number(projectSeek.value)||0)/1000;if(Number.isFinite(video.duration)&&video.duration>0){video.currentTime=target*video.duration}paintProjectSeek()}
+function activateProject(index,scroll=false){activeProject=Math.max(0,Math.min(projects.length-1,index));layers.forEach((layer,layerIndex)=>{const video=layer.querySelector("video"),active=layerIndex===activeProject;layer.classList.toggle("active",active);video.muted=!projectSound;if(active){video.preload="metadata";video.play().catch(()=>{});setTimeout(syncProjectSeek,80)}else{video.pause();if(Math.abs(layerIndex-activeProject)>1)video.preload="none"}});projectPanels.forEach((panel,panelIndex)=>panel.classList.toggle("active",panelIndex===activeProject));if(projectCounter)projectCounter.textContent=`${String(activeProject+1).padStart(2,"0")} / ${String(projects.length).padStart(2,"0")}`;if(projectSeek){projectSeek.value=0;paintProjectSeek()}if(scroll)projectPanels[activeProject]?.scrollIntoView({behavior:prefersReducedMotion?"auto":"smooth",block:"center"})}
+activateProject(0);
+if("IntersectionObserver"in window){const projectObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting)activateProject(Number(entry.target.dataset.project))})},{threshold:.52});projectPanels.forEach(panel=>projectObserver.observe(panel))}
+layers.forEach(layer=>{const video=layer.querySelector("video");video.addEventListener("timeupdate",()=>{if(layer.classList.contains("active"))syncProjectSeek()});video.addEventListener("loadedmetadata",()=>{if(layer.classList.contains("active"))syncProjectSeek()});video.addEventListener("play",()=>{if(layer.classList.contains("active"))document.querySelector("#projectToggle").textContent="Pause"});video.addEventListener("pause",()=>{if(layer.classList.contains("active"))document.querySelector("#projectToggle").textContent="Play"})});
+projectSeek?.addEventListener("pointerdown",()=>{isProjectScrubbing=true});
+projectSeek?.addEventListener("input",seekActiveProject);
+projectSeek?.addEventListener("change",()=>{seekActiveProject();isProjectScrubbing=false});
+window.addEventListener("pointerup",()=>{if(isProjectScrubbing){seekActiveProject();isProjectScrubbing=false}});
+paintProjectSeek();
+document.querySelector("#projectPrev")?.addEventListener("click",()=>activateProject(activeProject-1,true));document.querySelector("#projectNext")?.addEventListener("click",()=>activateProject(activeProject+1,true));document.querySelector("#projectToggle")?.addEventListener("click",event=>{const video=activeVideo();if(!video)return;if(video.paused)video.play().catch(()=>{});else video.pause();event.currentTarget.textContent=video.paused?"Play":"Pause"});document.querySelector("#projectMute")?.addEventListener("click",event=>{projectSound=!projectSound;layers.forEach(layer=>layer.querySelector("video").muted=!projectSound);event.currentTarget.textContent=projectSound?"Sound on":"Sound off";activeVideo()?.play().catch(()=>{})});document.querySelector(".project-media")?.addEventListener("click",event=>{if(event.target.closest("button,input"))return;document.querySelector("#projectToggle")?.click()});
+const lazyVideos=[...document.querySelectorAll(".featured-card video,.motion video,.archive-preview,.final-frame video")];if("IntersectionObserver"in window){const videoObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{const video=entry.target;if(video.closest(".featured-card")&&window.matchMedia("(max-width: 900px)").matches)return;if(entry.isIntersecting){video.preload="metadata";if(video.closest(".featured-card")&&!video.closest(".featured-card.active"))return;video.play().catch(()=>{})}else video.pause()})},{threshold:.12});lazyVideos.forEach(video=>videoObserver.observe(video))}
+const statObserver="IntersectionObserver"in window?new IntersectionObserver(entries=>{entries.forEach(entry=>{if(!entry.isIntersecting||entry.target.dataset.done)return;entry.target.dataset.done="true";const target=Number(entry.target.dataset.count),start=performance.now(),duration=1500;function tick(now){const progress=Math.min((now-start)/duration,1),eased=1-Math.pow(1-progress,3);entry.target.textContent=`${Math.round(target*eased)}+`;if(progress<1)requestAnimationFrame(tick)}requestAnimationFrame(tick)})},{threshold:.6}):null;document.querySelectorAll("[data-count]").forEach(el=>{if(el.closest(".archive-card")||el.closest(".archive-stat"))return;if(statObserver)statObserver.observe(el);else el.textContent=`${el.dataset.count}+`});
+function buildArchiveSlider(number){const raw=String(number.dataset.count||number.textContent.trim()),hasPlus=raw.includes("+")||number.textContent.includes("+"),clean=raw.replace(/[^\d,]/g,"");let digitIdx=0;const rows=digit=>[0,1,2,3,4,5,6,7,8,9,digit].map(row=>`<span>${row}</span>`).join("");number.innerHTML=[...clean].map(ch=>{if(ch===",")return '<span class="digit-separator">,</span>';const idx=digitIdx++;return `<span class="digit-window" data-digit="${ch}" style="--digit-idx:${idx}"><span class="digit-track">${rows(ch)}</span></span>`}).join("")+(hasPlus?'<span class="count-plus">+</span>':'')}
+document.querySelectorAll(":is(.archive-card, .archive-stat) [data-count]").forEach(buildArchiveSlider);
+const archiveRollCards=[...document.querySelectorAll(".archive-stat, .archive-card")];
+function rollAllArchiveCounts(){archiveRollCards.forEach(card=>{card.classList.remove("is-rolling");void card.offsetWidth;card.classList.add("is-rolling");clearTimeout(Number(card.dataset.rollTimer)||0);card.dataset.rollTimer=setTimeout(()=>card.classList.remove("is-rolling"),1400)})}
+if("IntersectionObserver"in window){const archiveScrollObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting)rollAllArchiveCounts()})},{threshold:.22});const archiveSec=document.querySelector("#archive");if(archiveSec)archiveScrollObserver.observe(archiveSec)}
+document.querySelectorAll("[data-archive-roll]").forEach(tab=>{const type=tab.dataset.archiveRoll,card=document.querySelector(`[data-archive-card="${type}"]`);["mouseenter","focus"].forEach(eventName=>tab.addEventListener(eventName,()=>{if(!card)return;card.classList.remove("is-rolling");void card.offsetWidth;card.classList.add("is-rolling");clearTimeout(Number(card.dataset.rollTimer)||0);card.dataset.rollTimer=setTimeout(()=>card.classList.remove("is-rolling"),1400)}))});
+document.querySelectorAll(".faq-item").forEach(item=>{const button=item.querySelector("button"),answer=item.querySelector(".faq-answer");if(item.classList.contains("open")&&answer)answer.style.height=`${answer.scrollHeight}px`;button?.addEventListener("click",()=>{const open=item.classList.contains("open");document.querySelectorAll(".faq-item").forEach(other=>{other.classList.remove("open");other.querySelector("button")?.setAttribute("aria-expanded","false");const otherAnswer=other.querySelector(".faq-answer");if(otherAnswer)otherAnswer.style.height="0px"});if(!open&&answer){item.classList.add("open");button.setAttribute("aria-expanded","true");answer.style.height=`${answer.scrollHeight}px`}})});
+const dialog=document.querySelector("#caseDialog"),caseBody=dialog?.querySelector(".case-body"),closeCase=dialog?.querySelector(".case-close");
+function caseTemplate(project,index){const next=projects[(index+1)%projects.length];return `<section class="case-hero"><video src="${project.file}" muted playsinline loop autoplay></video><div class="case-title"><p>Project ${project.number} / ${project.category}</p><h2>${project.title}</h2></div></section><section class="case-content"><dl><div><dt>Role</dt><dd>${project.role}</dd></div><div><dt>Format</dt><dd>${project.format}</dd></div><div><dt>Media</dt><dd>Existing portfolio video asset</dd></div></dl><div><h3>Context</h3><p>${project.context}</p><h3>Creative process</h3><p>${project.process}</p><h3>Production, editing and motion</h3><p>The available project information points to an end-to-end creative role: shaping the idea, preparing the message, building the visuals, editing the rhythm, refining sound and color, and delivering a social-ready final output.</p></div></section><div class="case-next"><button class="case-link" type="button" data-open-case="${(index+1)%projects.length}">Next project: ${next.title} ↗</button></div>`}
+function openCase(index){if(!dialog||!caseBody)return;const project=projects[index];caseBody.innerHTML=caseTemplate(project,index);document.body.classList.add("case-open");if(typeof dialog.showModal==="function")dialog.showModal();else dialog.setAttribute("open","");history.replaceState(null,"",`#project-${project.number}`)}
+function closeCaseDialog(){if(!dialog)return;document.body.classList.remove("case-open");if(dialog.open&&typeof dialog.close==="function")dialog.close();else dialog.removeAttribute("open");if(location.hash.startsWith("#project-"))history.replaceState(null,"","#work")}
+document.addEventListener("click",event=>{const opener=event.target.closest("[data-open-case]");if(!opener)return;openCase(Number(opener.dataset.openCase))});closeCase?.addEventListener("click",closeCaseDialog);dialog?.addEventListener("click",event=>{if(event.target===dialog)closeCaseDialog()});window.addEventListener("keydown",event=>{if(event.key==="Escape"&&dialog?.open)closeCaseDialog()});
+const hashMatch=location.hash.match(/^#project-(\d+)/);if(hashMatch){const index=Math.max(0,Math.min(projects.length-1,Number(hashMatch[1])-1));requestAnimationFrame(()=>openCase(index))}
 
-// ── Email Compose Widget: DISABLED ─────────────────────────────
-// All email widget code commented out. Button uses plain mailto: link.
+const featuredCards=[...document.querySelectorAll(".featured-card")],featuredCopy=document.querySelector(".featured-copy"),featuredNumber=document.querySelector("#featuredNumber"),featuredCategory=document.querySelector("#featuredCategory"),featuredTitle=document.querySelector("#featuredTitle"),featuredDesc=document.querySelector("#featuredDesc"),featuredRole=document.querySelector("#featuredRole"),featuredFormat=document.querySelector("#featuredFormat"),featuredCase=document.querySelector("#featuredCase");
+const featuredRail=document.querySelector("#featuredRail"),featuredMobile=window.matchMedia("(max-width: 900px)");
+let featuredIndex=0,featuredTimer=0,featuredSound=false,featuredFlashTimer=0,featuredScrubbing=false;
+let featuredRailVisible=false,featuredScrollFrame=0;
+function syncFeaturedVolume(){featuredCards.forEach(card=>{const button=card.querySelector(".featured-volume"),video=card.querySelector("video");if(video)video.muted=!featuredSound;if(button){const label=featuredSound?"Turn sound off":"Turn sound on";button.setAttribute("aria-label",label);button.setAttribute("title",label);button.setAttribute("aria-pressed",String(featuredSound));button.querySelector("use").setAttribute("href",featuredSound?"#icon-volume-on":"#icon-volume-off")}})}
+function flashFeatured(card,playing){const flash=card?.querySelector(".featured-flash");if(!flash)return;flash.textContent=playing?"Ⅱ":"▶";flash.classList.remove("show");void flash.offsetWidth;flash.classList.add("show");clearTimeout(featuredFlashTimer);featuredFlashTimer=setTimeout(()=>flash.classList.remove("show"),680)}
+function paintFeaturedSeek(seek){if(!seek)return;const progress=(Number(seek.value)||0)/10;seek.style.setProperty("--seek",`${progress}%`)}
+function syncFeaturedSeek(card){const video=card?.querySelector("video"),seek=card?.querySelector(".featured-seek");if(!video||!seek||featuredScrubbing||!Number.isFinite(video.duration)||video.duration<=0)return;seek.value=Math.round((video.currentTime/video.duration)*1000);paintFeaturedSeek(seek)}
+function seekFeaturedVideo(card){const video=card?.querySelector("video"),seek=card?.querySelector(".featured-seek");if(!video||!seek)return;const fraction=(Number(seek.value)||0)/1000;if(Number.isFinite(video.duration)&&video.duration>0)video.currentTime=fraction*video.duration;paintFeaturedSeek(seek)}
+function paintFeaturedProject(index){const project=projects[index];if(!project)return;featuredCards.forEach((card,cardIndex)=>{const active=cardIndex===index,video=card.querySelector("video");card.classList.toggle("active",active);card.setAttribute("aria-pressed",String(active));if(video)video.muted=!featuredSound;if(active){video&&(video.preload="metadata");if(!featuredMobile.matches||featuredRailVisible)video?.play().catch(()=>{})}else{video?.pause()}});syncFeaturedVolume();if(featuredNumber)featuredNumber.textContent=`Project ${project.number}`;if(featuredCategory)featuredCategory.textContent=project.category;if(featuredTitle)featuredTitle.textContent=project.title;if(featuredDesc)featuredDesc.textContent=project.context+" "+project.process;if(featuredRole)featuredRole.textContent=project.role;if(featuredFormat)featuredFormat.textContent=project.format;if(featuredCase)featuredCase.dataset.openCase=String(index)}
+function setFeaturedProject(index){if(index===featuredIndex)return;featuredIndex=index;clearTimeout(featuredTimer);if(featuredMobile.matches){paintFeaturedProject(index);featuredCopy?.classList.remove("is-switching");return}featuredCopy?.classList.add("is-switching");featuredTimer=setTimeout(()=>{paintFeaturedProject(index);requestAnimationFrame(()=>featuredCopy?.classList.remove("is-switching"))},230)}
+function syncFeaturedRail(){if(!featuredMobile.matches||!featuredRail)return;const rail=featuredRail.getBoundingClientRect(),center=rail.left+rail.width/2;let nearest=featuredIndex,distance=Infinity;featuredCards.forEach((card,index)=>{const rect=card.getBoundingClientRect(),nextDistance=Math.abs(rect.left+rect.width/2-center);if(nextDistance<distance){distance=nextDistance;nearest=index}});setFeaturedProject(nearest)}
+featuredRail?.addEventListener("scroll",()=>{if(featuredScrollFrame)cancelAnimationFrame(featuredScrollFrame);featuredScrollFrame=requestAnimationFrame(()=>{featuredScrollFrame=0;syncFeaturedRail()})},{passive:true});
+if(featuredRail&&"IntersectionObserver"in window){const featuredVisibility=new IntersectionObserver(entries=>{if(!featuredMobile.matches)return;featuredRailVisible=entries[0].isIntersecting;if(featuredRailVisible){syncFeaturedRail();featuredCards[featuredIndex]?.querySelector("video")?.play().catch(()=>{})}else featuredCards.forEach(card=>card.querySelector("video")?.pause())},{threshold:.1});featuredVisibility.observe(featuredRail)}else featuredRailVisible=true;
+featuredCards.forEach(card=>{const index=Number(card.dataset.project),video=card.querySelector("video"),volume=card.querySelector(".featured-volume"),seek=card.querySelector(".featured-seek");paintFeaturedSeek(seek);card.addEventListener("mouseenter",()=>setFeaturedProject(index));card.addEventListener("focus",()=>setFeaturedProject(index));card.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();card.click()}});card.addEventListener("click",event=>{if(event.target.closest(".featured-volume,.featured-seek"))return;if(index!==featuredIndex){setFeaturedProject(index);return}if(!video)return;if(video.paused){video.play().catch(()=>{});flashFeatured(card,true)}else{video.pause();flashFeatured(card,false)}});volume?.addEventListener("click",event=>{event.stopPropagation();if(index!==featuredIndex)setFeaturedProject(index);featuredSound=!featuredSound;syncFeaturedVolume();card.querySelector("video")?.play().catch(()=>{})});seek?.addEventListener("pointerdown",event=>{event.stopPropagation();featuredScrubbing=true});seek?.addEventListener("click",event=>event.stopPropagation());seek?.addEventListener("input",event=>{event.stopPropagation();seekFeaturedVideo(card)});seek?.addEventListener("change",event=>{event.stopPropagation();seekFeaturedVideo(card);featuredScrubbing=false});video?.addEventListener("timeupdate",()=>{if(card.classList.contains("active"))syncFeaturedSeek(card)});video?.addEventListener("loadedmetadata",event=>{event.currentTarget.currentTime=0;syncFeaturedSeek(card)})});
+window.addEventListener("pointerup",()=>{if(featuredScrubbing){seekFeaturedVideo(featuredCards[featuredIndex]);featuredScrubbing=false}});
+paintFeaturedProject(0);
+
+const contactFooter = document.querySelector(".site-footer");
+const softwareOrbit = document.querySelector(".software-grid");
+const heroHologram = document.querySelector(".hero-hologram");
+if (softwareOrbit && heroHologram) {
+  const hologram = softwareOrbit.cloneNode(true);
+  hologram.removeAttribute("aria-label");
+  hologram.querySelectorAll("img").forEach(img => { img.loading = "eager"; });
+  heroHologram.append(hologram);
+}
+document.querySelectorAll(".software-grid").forEach(softwareOrbit => {
+  const satellites = [...softwareOrbit.children].filter(item => !item.querySelector(".software-resolve"));
+  const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  softwareOrbit.classList.add("is-orbiting");
+  let phase = -Math.PI / 2, frame = 0, lastTime = 0, visible = false;
+  let radiusX = softwareOrbit.clientWidth * .3;
+  const tilt = 39 * Math.PI / 180;
+  function paintOrbit() {
+    satellites.forEach((item, index) => {
+      const angle = phase + index * Math.PI * 2 / satellites.length;
+      const x = radiusX * Math.cos(angle), y = 155 * Math.sin(angle);
+      const rotatedX = x * Math.cos(tilt) - y * Math.sin(tilt);
+      const rotatedY = x * Math.sin(tilt) + y * Math.cos(tilt);
+      item.style.transform = `translate(-50%,-50%) translate(${rotatedX.toFixed(2)}px,${rotatedY.toFixed(2)}px)`;
+    });
+  }
+  function tickOrbit(now) {
+    phase += Math.min(now - lastTime, 50) * Math.PI * 2 / 60000;
+    lastTime = now;
+    paintOrbit();
+    frame = requestAnimationFrame(tickOrbit);
+  }
+  function syncOrbit() {
+    cancelAnimationFrame(frame);
+    frame = 0;
+    if (visible && !document.hidden && !motion.matches) {
+      lastTime = performance.now();
+      frame = requestAnimationFrame(tickOrbit);
+    }
+  }
+  const orbitSize = new ResizeObserver(() => {
+    radiusX = softwareOrbit.clientWidth * .3;
+    paintOrbit();
+  });
+  orbitSize.observe(softwareOrbit);
+  if ("IntersectionObserver" in window) {
+    const orbitVisibility = new IntersectionObserver(entries => {
+      visible = entries[0].isIntersecting;
+      syncOrbit();
+    });
+    orbitVisibility.observe(softwareOrbit);
+  } else { visible = true; syncOrbit(); }
+  motion.addEventListener("change", syncOrbit);
+  document.addEventListener("visibilitychange", syncOrbit);
+  paintOrbit();
+});
+const contactHeadline = document.querySelector(".footer-cta");
+const contactSocials = document.querySelector(".footer-bottom-social");
+const contactArrow = document.querySelector(".footer-contact-arrow");
+if (contactSocials) {
+  const items = [...contactSocials.querySelectorAll("a")];
+  const scales = items.map(() => 1);
+  const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let position = null, frame = 0, lastTime = 0;
+  function animateSocialDock(now) {
+    const blend = 1 - Math.exp(-Math.min(now - lastTime, 40) / 75);
+    lastTime = now;
+    let moving = false;
+    items.forEach((item, index) => {
+      const influence = position === null || motion.matches ? 0 : Math.exp(-Math.pow((index - position) / 1.05, 2));
+      const target = 1 + .55 * influence;
+      scales[index] += (target - scales[index]) * blend;
+      if (Math.abs(target - scales[index]) < .001) scales[index] = target;
+      else moving = true;
+      item.style.setProperty("--social-scale", scales[index].toFixed(4));
+      item.style.setProperty("--social-space", `${item.offsetWidth * (scales[index] - 1) / 2}px`);
+    });
+    frame = moving ? requestAnimationFrame(animateSocialDock) : 0;
+  }
+  function updateSocialDock(value) {
+    position = value;
+    if (!frame) { lastTime = performance.now(); frame = requestAnimationFrame(animateSocialDock); }
+  }
+  contactSocials.addEventListener("pointermove", event => {
+    if (event.pointerType === "touch") return;
+    const centers = items.map(item => { const rect = item.getBoundingClientRect(); return rect.left + rect.width / 2; });
+    let value = items.length - 1;
+    if (event.clientX <= centers[0]) value = 0;
+    else for (let i = 0; i < centers.length - 1; i++) {
+      if (event.clientX <= centers[i + 1]) { value = i + (event.clientX - centers[i]) / (centers[i + 1] - centers[i]); break; }
+    }
+    updateSocialDock(value);
+  });
+  contactSocials.addEventListener("pointerleave", () => updateSocialDock(null));
+  contactSocials.addEventListener("focusin", event => updateSocialDock(items.indexOf(event.target.closest("a"))));
+  contactSocials.addEventListener("focusout", event => { if (!contactSocials.contains(event.relatedTarget)) updateSocialDock(null); });
+  motion.addEventListener("change", () => updateSocialDock(null));
+}
+if (contactFooter && contactHeadline && contactSocials && contactArrow) {
+  function positionContactArrow() {
+    const footer = contactFooter.getBoundingClientRect();
+    const headline = contactHeadline.getBoundingClientRect();
+    const prompt = contactFooter.querySelector(".footer-message > .footer-label");
+    if (prompt?.offsetParent) {
+      const parent = prompt.offsetParent.getBoundingClientRect();
+      prompt.style.setProperty("--footer-headline-top", `${headline.top - parent.top}px`);
+      prompt.style.setProperty("--footer-headline-center", `${headline.left + headline.width / 2 - parent.left}px`);
+    }
+    const signature = contactFooter.querySelector(".footer-signature");
+    if (signature) {
+      signature.style.setProperty("--footer-name-top", `${headline.top - signature.getBoundingClientRect().top}px`);
+    }
+    const socials = contactSocials.getBoundingClientRect();
+    const mail = contactSocials.querySelector("a").getBoundingClientRect();
+    const x = socials.left + socials.width / 2 - footer.left;
+    const endY = socials.top - footer.top - 12;
+    // Keep the illustration in the open space above the contacts, including stacked layouts.
+    const startY = Math.max(headline.bottom - footer.top + 18, endY - 120);
+    const height = endY - startY;
+    contactArrow.style.visibility = height > 24 ? "visible" : "hidden";
+    contactArrow.setAttribute("viewBox", `0 0 ${footer.width} ${footer.height}`);
+    const bend = Math.min(100, footer.width * .16);
+    const mailX = mail.left - footer.left - 10;
+    const mailY = mail.top + mail.height / 2 - footer.top;
+    const turnX = Math.max(8, mailX - 40);
+    contactArrow.querySelector(".footer-arrow-shaft").setAttribute("d",
+      `M ${x + bend * .65} ${startY} C ${x + bend * 1.3} ${startY + height * .35}, ${turnX} ${startY + height * .3}, ${turnX} ${endY} C ${turnX} ${mailY}, ${mailX - 24} ${mailY}, ${mailX} ${mailY}`);
+    contactArrow.querySelector(".footer-arrow-tip").setAttribute("d",
+      `M ${mailX - 15} ${mailY - 10} Q ${mailX - 6} ${mailY - 3}, ${mailX} ${mailY} Q ${mailX - 8} ${mailY + 3}, ${mailX - 16} ${mailY + 9}`);
+  }
+  const contactArrowObserver = new ResizeObserver(positionContactArrow);
+  [contactFooter, contactHeadline, contactSocials].forEach(element => contactArrowObserver.observe(element));
+  document.fonts.ready.then(positionContactArrow);
+  contactFooter.addEventListener("animationend", event => {
+    if (event.target.matches(".footer-reveal") && event.animationName === "revealPremium") positionContactArrow();
+  });
+  window.addEventListener("resize", positionContactArrow, { passive: true });
+  positionContactArrow();
+  const contactMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let replayTimer = 0;
+  function revealContact() {
+    contactFooter.classList.add("contact-drawn");
+  }
+  function replayContact() {
+    if (!contactFooter.classList.contains("contact-drawn") || contactMotion.matches) {
+      revealContact();
+      return;
+    }
+    clearTimeout(replayTimer);
+    contactFooter.classList.add("contact-replaying");
+    replayTimer = setTimeout(() => contactFooter.classList.remove("contact-replaying"), 260);
+  }
+  if ("IntersectionObserver" in window) {
+    const contactRevealObserver = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        revealContact();
+        contactRevealObserver.disconnect();
+      }
+    }, { threshold: .4 });
+    contactRevealObserver.observe(contactHeadline);
+  } else revealContact();
+  contactHeadline.addEventListener("pointerenter", event => {
+    if (event.pointerType !== "touch") replayContact();
+  });
+  contactHeadline.addEventListener("focus", replayContact);
+  contactMotion.addEventListener("change", () => {
+    clearTimeout(replayTimer);
+    contactFooter.classList.remove("contact-replaying");
+  });
+}
