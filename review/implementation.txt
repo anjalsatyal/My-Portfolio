@@ -1,0 +1,63 @@
+PORTFOLIO EXPANSION — 13 October 2026
+
+Branch: feat/portfolio-service-pages
+Baseline: 503ea2f, current deploy/seo-and-loading-fixes branch.
+Inspected local main and current checkout. The project data matches main.
+The current branch includes two existing homepage fixes beyond main; preserved.
+
+READY FOR REVIEW
+/portfolio/
+/video-editing/
+/motion-graphics/
+/projects/dg-academy/
+/projects/think-move-solution/
+
+LOCAL-ONLY DRAFT
+drafts/graphic-design/index.html (noindex, nofollow)
+Excluded with drafts/ and review/ in .vercelignore. No public navigation links.
+Missing: accessible standalone design examples; titles, briefs, verified roles,
+deliverables and process notes. The homepage links to a shared Drive archive,
+but local assets do not contain standalone graphic-design work. No claim is
+made that the Drive archive has no suitable assets; it was not inspected.
+
+CONTENT EVIDENCE
+script.js projects array: contexts, roles, categories and approach for all four
+selected pieces. index.html services/about: capabilities and Nepal location.
+VIDEO 1.mp4: DG Academy, 41.579 sec, 1080x1920.
+VIDEO 5.mp4: TMS, 13.077 sec, 1920x1080.
+VIDEO 2.mp4: Motion & Visual Storytelling, 26.944 sec, 1080x1920.
+VIDEO 6.mp4: recreated campaign motion, 19.3 sec, 1080x1920.
+Posters extracted at 3 seconds; no videos duplicated or modified.
+VIDEO 7.mp4 was already deleted locally and is not referenced by new pages.
+No invented client relationships, metrics, dates, awards or testimonials.
+Five pages provide distinct content: selected-work directory, production
+practice with two examples, motion practice with two playable examples, and
+two case studies with documented roles and original deliverables.
+
+SEO AND HOMEPAGE
+Unique titles/descriptions, non-www canonicals, social metadata, WebPage or
+CollectionPage and BreadcrumbList JSON-LD, one H1, semantic sections and
+crawlable navigation. New stylesheet scoped to .editorial-page; no homepage JS.
+Homepage HTML/CSS/JS, robots.txt and sitemap.xml are byte-identical to baseline.
+Google verification untouched. All 18 existing asset deletions preserved and
+excluded from the commit. Those baseline missing assets may still affect the
+local homepage; they were not restored or changed.
+Sitemap additions prepared in review/sitemap-proposed.xml for approval before
+replacing sitemap.xml. Graphic-design draft omitted.
+Optional homepage change for separate approval: add one ordinary Portfolio
+link pointing to /portfolio/ in existing navigation. Not implemented.
+
+VALIDATION
+All five routes return HTTP 200 on direct localhost navigation.
+Root-relative links, fragment targets and media/poster assets resolve.
+Heading hierarchy, canonicals, robots tags, JSON-LD and sitemap XML pass.
+Four source videos fully decode with FFmpeg.
+Chrome checks at 1440, 390 and 320 pixels: no horizontal overflow, no JavaScript
+errors, all embedded videos play and advance. Screenshots reviewed.
+No new-page JavaScript dependency; full content is present in HTML.
+Vercel route behavior still requires checking the actual Preview deployment.
+
+CHANGED FILES
+Five route index.html files, assets/portfolio-pages.css, four JPEG previews,
+one draft HTML file, .vercelignore, and these review materials.
+No production deployment or merge authorized/performed.
