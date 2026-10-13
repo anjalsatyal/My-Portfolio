@@ -200,9 +200,9 @@ window.addEventListener("pointerup",()=>{if(featuredScrubbing){seekFeaturedVideo
 paintFeaturedProject(0);
 
 const contactFooter = document.querySelector(".site-footer");
-const softwareOrbit = document.querySelector(".software-grid");
+const softwareOrbit = document.querySelector(".footer-toolkit .software-grid");
 const heroHologram = document.querySelector(".hero-hologram");
-if (softwareOrbit && heroHologram) {
+if (softwareOrbit && heroHologram && !heroHologram.querySelector(".software-grid")) {
   const hologram = softwareOrbit.cloneNode(true);
   hologram.removeAttribute("aria-label");
   hologram.querySelectorAll("img").forEach(img => { img.loading = "eager"; });
@@ -213,7 +213,7 @@ document.querySelectorAll(".software-grid").forEach(softwareOrbit => {
   const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
   softwareOrbit.classList.add("is-orbiting");
   let phase = -Math.PI / 2, frame = 0, lastTime = 0, visible = false;
-  let radiusX = softwareOrbit.clientWidth * .3;
+  let radiusX = (softwareOrbit.clientWidth || 256) * .3;
   const tilt = 39 * Math.PI / 180;
   function paintOrbit() {
     satellites.forEach((item, index) => {
