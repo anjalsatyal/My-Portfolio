@@ -1,0 +1,393 @@
+ANJAL SATYAL — COMPETITIVE SEO REVIEW
+Research and implementation date: 13 October 2026 (Asia/Kathmandu)
+Scope: local, uncommitted SEO changes. No merge, commit, push or deployment.
+
+1. STRATEGIC DECISION AND RESEARCH LIMITS
+
+Prioritize the personal brand, freelance video editing in Nepal/Lalitpur,
+and motion graphics in Nepal. The portfolio and two real case studies support
+these services. Do not add an agency page, three city copies of the same page,
+or extra videography/production pages merely to capture more phrases.
+
+Live web search and competitor-page inspection were available. Direct Google
+SERP requests with gl=np and hl=en were inaccessible. Therefore this is a
+source-backed competitor/content review, NOT a verified Kathmandu Google
+ranking report. The keyword map is provisional. No positions, volumes,
+difficulty scores, traffic estimates or expected rankings are claimed. Search
+provider order is not Google rank. No Search Console data was available.
+
+The 29 requested keywords and two supporting project queries are mapped in
+competitive-seo-keyword-map.csv. “Best” describes a buyer's comparison intent;
+it does not justify calling Anjal the best or number one. Short-term means a
+work priority based on existing evidence, not a promised time-to-rank.
+
+Use Patan, Lalitpur, Nepal as the verified base. Kathmandu Valley is geographic
+context; it does not establish a Kathmandu-city office, travel coverage or
+availability. Do not create Kathmandu/Lalitpur doorway pages. Prefer a single
+useful service page for close synonyms and location variants.
+
+2. OBSERVED COMPETITOR CONTENT AND INTENT
+
+These are examples returned by live web search, not a complete competitive set
+or a ranked list. Competitor claims and testimonials were not independently
+audited. Do not copy their claims into Anjal's portfolio.
+
+Video editing
+- Upwork's Kathmandu video-editor directory presents individual profiles,
+  work specialisms, client feedback and hiring options. This is evidence of a
+  comparison/hiring page format, not evidence of Anjal's standing.
+  https://www.upwork.com/hire/video-editors/np/kathmandu/
+- A dedicated Bikash Thapa freelance-video-editor service page appeared in
+  search. The direct page fetch failed; observations are limited to its search
+  excerpt and title, not a full content audit.
+  https://bikasthapa04.com.np/freelance-video-editor-in-nepal/
+- Opportunity (inference): make it immediately clear what Anjal edits, where
+  he is based, which parts he handled, what the finished work looks like and
+  what a potential client should send. Do not compete on fabricated rates,
+  guaranteed turnaround, or unverified ratings.
+
+Motion graphics
+- Nepal Animation's service page contains specific motion projects, capability
+  sections and a project enquiry CTA. Its portfolio goes beyond naming tools.
+  https://nepalanimation.com/services/motion-graphic-service-in-nepal
+- Opportunity (inference): readable project roles and playable examples matter
+  more than repeating After Effects. Add genuine storyboards and sequence
+  breakdowns when supplied. Disclose recreated work, and seek an additional
+  original commissioned example with publication permission.
+
+Videography and production
+- Anup Sapkota's search excerpt describes a filmmaker/director portfolio across
+  commercials, music videos and documentary. The fetched page did not expose
+  readable text, so this finding is excerpt-only.
+  https://www.anupsapkota.com/
+- Erys Labs presents production service categories, work and a production
+  process. Its self-reported business metrics are not adopted here.
+  https://www.eryslabs.com/
+- Kathmandu Films' project listing describes production and line-production
+  work with project-specific context (search excerpt inspected).
+  https://kathmandufilms.com/projects/
+- Opportunity (inference): shooting enquiries require evidence of what was
+  filmed, responsibility on set and real logistics; production enquiries need
+  scope ownership and deliverables. Current Anjal notes establish shooting and
+  scripting, but not equipment, crew, shoot locations, scheduling or budgets.
+
+Graphic design
+- A Behance profile for Riwoj Chaulagain shows individual project collections,
+  design work and hiring context. It is a format reference, not endorsement.
+  https://www.behance.net/rioboyyy6
+- Prabin Thapa Magar's portfolio presents design categories and an enquiry
+  form; the retrieved content also contains a generic project placeholder.
+  Do not treat every competitor section as a quality benchmark.
+  https://prabintmagar.com.np/
+- Opportunity (inference): publish genuinely viewable design work with briefs,
+  roles and outputs before creating an indexable design service page.
+
+Agency intent
+- The Manifest returns a company comparison directory, rather than a single
+  creative professional's portfolio.
+  https://themanifest.com/np/digital-marketing/agencies
+- Connectifi's site describes SEO, paid advertising and social media services
+  and shows creative examples. Its marketing claims are not independent proof.
+  https://www.connectifisolutions.com.np/
+- Inference: agency searches often concern company capabilities, campaigns,
+  ongoing management and accountability. Editing one agency introduction
+  video does not demonstrate all of those services.
+
+Personal brand
+- Broad quoted-name searches in this session did not give sufficient evidence
+  to state the site's Google position. Same-name results are not identity
+  proof. Use Search Console's actual query/page data to establish a baseline.
+
+3. FIVE-PAGE RECOMMENDATIONS AND LOCAL IMPLEMENTATION
+
+/portfolio/
+Intent: branded selected-work directory, not another generic service page.
+Title: Anjal Satyal Portfolio | Video Editing & Motion Graphics
+Description: Explore Anjal Satyal’s video editing and motion graphics portfolio
+from Nepal, including the DG Academy documentary and Think Move Solution
+social video.
+H1: Anjal Satyal’s creative portfolio.
+Implemented: named H1, local context, synchronized title/description across
+HTML, social metadata and WebPage JSON-LD; readable breadcrumb matched to schema.
+Keep four available projects with their actual roles. Future improvement:
+replace broad summaries with supplied constraints and credited outcomes.
+
+/video-editing/
+Intent: hire a freelance video editor; primary non-branded service destination.
+Title: Freelance Video Editor in Nepal | Anjal Satyal
+Description: Freelance video editor based in Patan, Lalitpur, Nepal. Explore
+Anjal Satyal’s documentary and social video work, including editing, color
+grading and sound.
+H1: Video editor in Nepal.
+H2s now identify documentary/social examples, editing/post-production and what
+to include in a brief. Added availability consistent with the homepage FAQ.
+The brief asks for message, audience, footage, duration, references and deadline;
+it does not promise prices, revision counts or delivery speed.
+Maintain production context until a separate production page has real substance.
+
+/motion-graphics/
+Intent: hire a motion designer and evaluate moving-image examples.
+Title: Motion Graphics Designer in Nepal | Anjal Satyal
+Description: Motion graphics by Anjal Satyal in Patan, Lalitpur, Nepal. View
+animated storytelling and recreated campaign motion with art direction,
+editing and sound.
+H1: Motion graphics designer in Nepal.
+Added specific location, message/asset briefing guidance and a brief After
+Effects toolkit reference supported by the homepage software list. No claim
+is made that a particular video was built in a specific application.
+Keep the recreation disclosure; never use visible third-party logos as proof
+of a client relationship. Future need: original project source/process evidence.
+
+/projects/dg-academy/
+Intent: watch the DG Academy documentary and evaluate Anjal's contribution.
+Title: DG Academy Documentary | Video Editing by Anjal Satyal
+Description: Watch the DG Academy documentary about Dhiraj Chhetri’s path into
+graphic design. Explore Anjal Satyal’s role in scripting, shooting, editing,
+color and sound.
+H1: DG Academy documentary.
+Added descriptive metadata and links back to editing, motion and the portfolio.
+Preserved the story and role evidence. Future need: actual publishing date,
+public credit/source, approved collaborator names and a concrete editorial
+choice or constraint. Do not fabricate results to fill a case-study section.
+
+/projects/think-move-solution/
+Intent: watch TMS's first social introduction and assess the creative role.
+Title: Think Move Solution Social Video | Anjal Satyal
+Description: Watch Think Move Solution’s first social introduction video.
+Explore Anjal Satyal’s responsibilities in ideation, scripting, shooting and
+the final edit.
+H1: Think Move Solution social video.
+Added descriptive metadata and contextual service links. Brand awareness and
+client acquisition remain intentions, not measured outcomes. Future need:
+approved public release link/date, an actual scripting/editing decision and
+permission to display any further material.
+
+Across all five pages: visible breadcrumbs and BreadcrumbList now agree. The
+old video-editing breadcrumb contained a literal <br> string in JSON-LD; removed.
+Project breadcrumbs now include Home > Portfolio > Project. No stylesheet,
+font, animation, media file or homepage markup was changed in this task.
+
+4. ADDITIONAL SERVICE PAGE PROPOSALS — NOT CREATED
+
+/videography/
+Primary keyword: Professional Videographer Nepal.
+Secondary: videographer in Nepal; videographer Kathmandu; Anjal Satyal
+videographer. “Best” variants are comparison opportunities, not claims.
+Intent: hire a person for on-location image and sound capture.
+Proposed title: Videographer in Nepal | Anjal Satyal
+Proposed description: Explore Anjal Satyal’s videography work from Nepal,
+including documentary and social projects, with shooting responsibilities
+and finished films.
+Proposed H1: Videography in Nepal.
+H2 outline: Selected shoots; My role behind the camera; Production decisions;
+Planning a shoot; Related editing work; Discuss your shoot.
+Existing evidence: DG Academy VIDEO 1.mp4; TMS VIDEO 5.mp4; shooting appears in
+both documented roles. These may support examples, not an invented camera kit.
+Unique requirements: verified shot breakdowns, actual lighting/audio decisions,
+behind-the-scenes stills with rights, credits distinguishing camera/operator
+roles, confirmed location/travel scope and how clients should brief a shoot.
+Links: portfolio -> videography -> both cases; videography <-> video-editing.
+Decision: defer. Two reused videos alone do not differentiate a new page.
+
+/video-production/
+Primary keyword: Video Production Nepal.
+Secondary: Commercial Video Production Nepal; video production in Lalitpur.
+Evaluate cinematic production only with a genuinely relevant, credited film.
+Intent: commission a finished production spanning concept, shoot and post.
+Proposed title: Video Production in Nepal | Anjal Satyal
+Proposed description: Explore Anjal Satyal’s video production work in Nepal,
+from documentary storytelling to social introductions, with verified roles
+from concept through editing.
+Proposed H1: Video production in Nepal.
+H2 outline: Documentary and brand-introduction work; From brief to final film;
+Scope and responsibilities; Production case studies; Plan your production.
+Existing evidence: DG Academy's ideation, script, shoot, edit, color and sound;
+TMS's ideation, script, shoot and edit. Reuse the original files, not copies.
+Unique requirements: documented pre-production decisions, actual deliverable
+lists, production constraints, coordination/crew responsibilities if any,
+revision and delivery practices confirmed by Anjal, and distinct project
+breakdowns rather than reworded editing copy.
+Links: portfolio -> production -> cases; production <-> editing, then
+videography only if that page is independently justified.
+Decision: defer. If production evidence arrives first, create this page alone
+and tighten /video-editing/ around post-production to avoid overlapping intent.
+
+Graphic design stays excluded from sitemap and public links. Gather selected
+original work before activating /graphic-design/. No minimum word count or
+arbitrary number of URLs guarantees quality or indexing.
+
+5. DIGITAL MARKETING AGENCY STRATEGY
+
+Verified local relationship: the existing portfolio says Anjal created TMS's
+first social video. Ownership, employment, partnership, agency services and
+official company domain are not established by that credit.
+
+External discovery: a tmstuddio.com article mentions Think Move Solution;
+other ThinkMove search results describe IT outsourcing/cloud/call-centre work.
+This is insufficient to match entities or certify an official website. The
+candidate site's homepage fetch timed out. Do not add a guessed outbound link,
+Organization employment claim or founder credit. Asked Anjal to confirm the
+agency name, formal role and official domain; strategy is conditional until
+that information is supplied.
+https://tmstuddio.com/importance-of-seo-in-nepal/
+https://merojob.com/management-trainee-business-deveopment
+
+If a real separate agency/domain is confirmed, build its SEO on that domain:
+- Clear company homepage with accurate identity, address/contact and team roles.
+- /services/social-media-marketing/, /services/seo/ and /services/paid-advertising/
+  only for services actually delivered and supported by the company.
+- /services/creative-production/ if verified; avoid cloning Anjal's portfolio.
+- Real case studies: baseline, scope, period, data source, results and permission.
+- Accurate Organization markup and consistent genuine business profiles.
+- Link the relevant TMS case study to its official company site with a neutral
+  label. Add a factual professional relationship only once confirmed. A
+  homepage link remains a separate approval item.
+Do not manufacture a “best agencies” list just to rank Anjal among competitors.
+
+6. HOMEPAGE INTERNAL LINK PROPOSAL — APPROVAL REQUIRED
+
+Current homepage is locked and unchanged, including the prior favicon patch.
+Its Selected Work buttons open JavaScript dialogs; they do not replace ordinary
+HTML links to the standalone project pages. New pages link among themselves
+but the homepage does not yet provide an ordinary link into that network.
+
+Smallest proposal: ONE “Portfolio” anchor to /portfolio/ alongside existing
+footer links, using existing link styles. This gives users and crawlers a path
+to all five pages without altering hero, main navigation or Selected Work.
+Proposed markup only: <a href="/portfolio/">Portfolio</a>
+Not inserted. Review footer wrapping on mobile if approved. An optional later
+step is ordinary case-study links near each project, but that is a larger
+interaction decision and is not part of this implementation.
+
+7. FINAL SITEMAP PLAN
+
+Production currently lists only /. The five completed pages are already live
+and present on origin/main. The local sitemap now includes these six canonicals:
+https://anjalsatyal.com.np/
+https://anjalsatyal.com.np/portfolio/
+https://anjalsatyal.com.np/video-editing/
+https://anjalsatyal.com.np/motion-graphics/
+https://anjalsatyal.com.np/projects/dg-academy/
+https://anjalsatyal.com.np/projects/think-move-solution/
+
+No graphic-design draft, future service proposal, review file, Preview URL,
+fragment URL or media file is included. Existing homepage sitemap entry is
+preserved. No fabricated lastmod dates. review/sitemap-proposed.xml from the
+previous task has the same URL set; sitemap.xml is now the local release file.
+Google recommends listing canonical URLs you want in results. A sitemap is a
+discovery aid, not an indexing guarantee. After authorized deployment verify
+all six and submit the sitemap through Search Console.
+https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap
+
+8. TECHNICAL SEO AUDIT AND RELEASE LIMITS
+
+Production observations (read-only, before this task's changes):
+- Homepage and five completed routes: HTTP 200; self-referencing non-www
+  canonicals; index, follow; no observed X-Robots-Tag noindex.
+- Production sitemap: only homepage. Fixed in local sitemap, not deployed.
+- /drafts/graphic-design/: HTTP 404 in Production, as intended.
+- Production og-image.jpg and VIDEO 7.mp4: HTTP 200. Their local absence is a
+  pre-existing deleted-asset state, not evidence of a production outage.
+- Production/favicon remains the previous task's deployment-pending item.
+
+Local changes and checks are recorded in competitive-seo-validation.txt.
+Unique titles/descriptions align with one primary intent per page; canonical
+routes remain stable. JSON-LD uses WebPage/CollectionPage and BreadcrumbList;
+it does not add false reviews, LocalBusiness details or company affiliations.
+Images have alt attributes; brand mark is decorative inside a named home link.
+Project-image alt text identifies the work. Native video controls and static
+source URLs remain; no new click-to-generate content is introduced.
+
+Video metadata: names, posters, durations and direct sources are available.
+Original publication/upload dates are not verified. Google requires uploadDate
+for VideoObject eligibility, so do not invent it from a file modification time
+or this deployment date. No incomplete VideoObject rich-result markup added.
+Obtain release dates and credit/source links; then consider accurate metadata
+on project pages, validate with Google's Rich Results Test, and check video
+indexing separately. A valid WebPage does not guarantee video indexing.
+https://developers.google.com/search/docs/appearance/structured-data/video
+
+No captions/transcripts were supplied; accessible, checked transcripts and
+captions are a future content improvement, not automatically fabricated text.
+Do not report Lighthouse, Core Web Vitals or field-performance scores: no such
+measurements were collected. Test actual search/crawl status in Search Console
+only after authorized publication of these changes.
+
+Integration: fetched origin/main without altering working files. Its tip is
+b19a73b, whose history contains merge PR #3 for the original five-page expansion.
+HEAD 2fb5fc8 is an ancestor; the two committed trees are identical. The feature
+branch is three commits behind in history, with no base-file divergence. No
+merge performed. Recheck origin/main before an authorized release; review only
+the six SEO files and any separately approved favicon files. Never stage the
+18 unrelated existing deletions with git add -A.
+
+9. EXACT CHANGE SCOPE
+
+Changed by THIS task:
+- portfolio/index.html
+- video-editing/index.html
+- motion-graphics/index.html
+- projects/dg-academy/index.html
+- projects/think-move-solution/index.html
+- sitemap.xml
+
+Added review-only artifacts (excluded from deployment by existing .vercelignore):
+- review/competitive-seo-strategy.txt (this report)
+- review/competitive-seo-keyword-map.csv (all requested keywords)
+- review/competitive-seo-validation.txt (test results and production snapshot)
+
+Earlier uncommitted favicon work is separate: index.html, favicon.ico,
+assets/favicons/favicon-96.png and assets/favicons/apple-touch-icon.png.
+It remains intact and is not part of this task's scoped diff. All original
+media and the homepage, CSS and JS remain unchanged from this task's start.
+No new /videography/, /video-production/ or agency page was created.
+
+10. PRIORITIZED 90-DAY ROADMAP
+
+Days 1–14 — discovery and evidence
+Owner: Anjal for approvals/access; developer for authorized release and QA.
+Review the local content and favicon fixes. Approve the smallest homepage link
+if desired. Only after explicit approval, integrate/recheck latest main and
+publish selected files; check HTTP status, assets, canonical and robots on the
+actual domain. Submit the six-URL sitemap and inspect each page in Search
+Console. Establish a 28-day query/page/country baseline where data exists.
+Record branded vs non-branded clicks/impressions and real enquiry sources.
+Deliverable: accessible routes, submitted sitemap, baseline report; no ranking
+promise. Confirm agency identity and obtain original video publication dates.
+
+Days 15–30 — strengthen existing proof
+Owner: Anjal supplies material; developer/content editor prepares review drafts.
+For each case obtain one real creative constraint, an editorial decision,
+approved public credits and a release link. Request genuine client feedback
+and explicit permission to publish it. Add accurate captions/transcripts and
+source-supported video markup where appropriate. Optimize existing LinkedIn
+and Instagram bios consistently; use only genuine profiles and project links.
+Deliverable: two better-evidenced case studies and accurate profile links.
+No fake testimonials, copied reviews or invented campaign outcomes.
+
+Days 31–60 — authority through actual work
+Ask real collaborators/publishers to credit Anjal and link the relevant case
+where appropriate; no purchased links or reciprocal-link schemes. Publish a
+useful, documented breakdown of the DG Academy edit or the TMS introduction,
+using real frames and decisions supplied by Anjal. Obtain original design
+samples and motion process evidence. Evaluate a Google Business Profile only
+if the real business meets Google's eligibility rules (including in-person
+customer contact); do not invent an address or virtual office.
+https://support.google.com/business/answer/3038177
+Deliverable: authorized case evidence, accurate credits, one useful article;
+publication and outreach still require explicit user authorization.
+
+Days 61–90 — refine using measured demand
+Compare the latest 28 days with the preceding period, segmented by page and
+branded/non-branded queries. Review indexing, relevant impressions, clicks,
+CTR and actual qualified enquiries; average position is diagnostic, not a
+business outcome. Use country/device segmentation when volume supports it.
+If two pages alternate for the same intent, improve differentiation before
+adding more pages. Update snippets where relevant impressions exist but clicks
+are weak, without promising a CTR uplift. Launch at most the next genuinely
+supported service page after approval; defer if proof is still missing.
+Deliverable: evidence-led revision plan and next-page go/no-go decision.
+
+Long-term priority: earn original work, public credits and client trust for
+competitive “best” comparisons. Early priority: discoverability and clear
+personal-service intent. No guaranteed top position or traffic target.
