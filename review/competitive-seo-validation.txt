@@ -1,0 +1,202 @@
+COMPETITIVE SEO VALIDATION — 13 October 2026
+
+Local checks: PASS
+- Five routes: HTTP 200 on localhost:4173.
+- Five unique titles and meta descriptions; consistent social/WebPage metadata.
+- One H1 per page, ordered H1/H2/H3 hierarchy.
+- Self-referencing non-www canonical URLs and index, follow tags.
+- All local root-relative links, fragment targets and referenced assets resolve.
+- Image alt attributes present (brand mark intentionally decorative).
+- JSON-LD parses; breadcrumb positions/routes/names match visible navigation.
+- Sitemap parses and includes exactly six unique live canonical HTML pages.
+- Homepage (including earlier favicon changes), both stylesheets, homepage JS
+  and robots.txt match SHA-256 hashes captured at this task's start.
+- All 18 pre-existing deleted assets remain untouched.
+- git diff --check passes.
+
+Browser checks: PASS
+Chrome at 1440x900, 390x900 and 320x900, all five revised pages.
+No horizontal overflow or page JavaScript errors. Each embedded video plays
+and advances. Desktop and mobile screenshots reviewed. No Safari device test,
+Lighthouse score, automated accessibility certification or field CWV measurement
+is claimed. Native media controls and unchanged CSS preserve baseline behavior.
+
+Production checks: read-only, before local changes are deployed
+All five existing pages and homepage HTTP 200 with matching canonical and
+index, follow tags. All ten unique new-page asset URLs checked return HTTP 200.
+Graphic design draft HTTP 404. Production sitemap still contains only homepage.
+The updated local copy is not deployed. Successful fetching is not proof of
+Google indexing. Production resource responses below are not a full external
+link crawl or a Search Console inspection.
+
+Integration: latest fetched origin/main b19a73b contains the original expansion.
+Its committed tree equals HEAD 2fb5fc8. HEAD is three commits behind by ancestry;
+no merge or fast-forward performed. Pending changes apply to the same base
+content. Refresh remote comparison again before any future approved release.
+
+Original homepage local issues: asset deletions existed before this task.
+Production checks confirmed og-image.jpg and VIDEO 7.mp4 still work there.
+No deletions restored, staged or committed. Earlier favicon additions remain
+uncommitted and unchanged. No GitHub push, merge, commit or deployment performed.
+
+RAW PRODUCTION ROUTE OBSERVATIONS
+[
+  {
+    "path": "/",
+    "status": 200,
+    "url": "https://anjalsatyal.com.np/",
+    "mime": "text/html; charset=utf-8",
+    "x_robots": null,
+    "canonical": [
+      "https://anjalsatyal.com.np/"
+    ],
+    "robots": [
+      "index, follow"
+    ]
+  },
+  {
+    "path": "/portfolio/",
+    "status": 200,
+    "url": "https://anjalsatyal.com.np/portfolio/",
+    "mime": "text/html; charset=utf-8",
+    "x_robots": null,
+    "canonical": [
+      "https://anjalsatyal.com.np/portfolio/"
+    ],
+    "robots": [
+      "index, follow"
+    ]
+  },
+  {
+    "path": "/video-editing/",
+    "status": 200,
+    "url": "https://anjalsatyal.com.np/video-editing/",
+    "mime": "text/html; charset=utf-8",
+    "x_robots": null,
+    "canonical": [
+      "https://anjalsatyal.com.np/video-editing/"
+    ],
+    "robots": [
+      "index, follow"
+    ]
+  },
+  {
+    "path": "/motion-graphics/",
+    "status": 200,
+    "url": "https://anjalsatyal.com.np/motion-graphics/",
+    "mime": "text/html; charset=utf-8",
+    "x_robots": null,
+    "canonical": [
+      "https://anjalsatyal.com.np/motion-graphics/"
+    ],
+    "robots": [
+      "index, follow"
+    ]
+  },
+  {
+    "path": "/projects/dg-academy/",
+    "status": 200,
+    "url": "https://anjalsatyal.com.np/projects/dg-academy/",
+    "mime": "text/html; charset=utf-8",
+    "x_robots": null,
+    "canonical": [
+      "https://anjalsatyal.com.np/projects/dg-academy/"
+    ],
+    "robots": [
+      "index, follow"
+    ]
+  },
+  {
+    "path": "/projects/think-move-solution/",
+    "status": 200,
+    "url": "https://anjalsatyal.com.np/projects/think-move-solution/",
+    "mime": "text/html; charset=utf-8",
+    "x_robots": null,
+    "canonical": [
+      "https://anjalsatyal.com.np/projects/think-move-solution/"
+    ],
+    "robots": [
+      "index, follow"
+    ]
+  },
+  {
+    "path": "/sitemap.xml",
+    "status": 200,
+    "url": "https://anjalsatyal.com.np/sitemap.xml",
+    "mime": "application/xml",
+    "x_robots": null,
+    "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url>\n    <loc>https://anjalsatyal.com.np/</loc>\n    <changefreq>monthly</changefreq>\n    <priority>1.0</priority>\n  </url>\n</urlset>\n"
+  },
+  {
+    "path": "/drafts/graphic-design/",
+    "status": 404
+  },
+  {
+    "path": "/assets/og-image.jpg",
+    "status": 200,
+    "url": "https://anjalsatyal.com.np/assets/og-image.jpg",
+    "mime": "image/jpeg",
+    "x_robots": null
+  },
+  {
+    "path": "/assets/PORTFOLIO/VIDEO%207.mp4",
+    "status": 200,
+    "url": "https://anjalsatyal.com.np/assets/PORTFOLIO/VIDEO%207.mp4",
+    "mime": "video/mp4",
+    "x_robots": null
+  }
+]
+
+RAW PRODUCTION RESOURCE OBSERVATIONS
+[
+  {
+    "url": "/assets/LOGO/anjal-monogram.png",
+    "status": 200,
+    "mime": "image/png"
+  },
+  {
+    "url": "/assets/PORTFOLIO/VIDEO%201.mp4",
+    "status": 200,
+    "mime": "video/mp4"
+  },
+  {
+    "url": "/assets/PORTFOLIO/VIDEO%202.mp4",
+    "status": 200,
+    "mime": "video/mp4"
+  },
+  {
+    "url": "/assets/PORTFOLIO/VIDEO%205.mp4",
+    "status": 200,
+    "mime": "video/mp4"
+  },
+  {
+    "url": "/assets/PORTFOLIO/VIDEO%206.mp4",
+    "status": 200,
+    "mime": "video/mp4"
+  },
+  {
+    "url": "/assets/portfolio-pages.css",
+    "status": 200,
+    "mime": "text/css; charset=utf-8"
+  },
+  {
+    "url": "/assets/project-previews/project-1.jpg",
+    "status": 200,
+    "mime": "image/jpeg"
+  },
+  {
+    "url": "/assets/project-previews/project-2.jpg",
+    "status": 200,
+    "mime": "image/jpeg"
+  },
+  {
+    "url": "/assets/project-previews/project-5.jpg",
+    "status": 200,
+    "mime": "image/jpeg"
+  },
+  {
+    "url": "/assets/project-previews/project-6.jpg",
+    "status": 200,
+    "mime": "image/jpeg"
+  }
+]
