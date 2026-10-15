@@ -1,0 +1,19 @@
+{
+  "redirects": [
+    {
+      "source": "/assets/favicon-32.png",
+      "destination": "/assets/favicons/favicon-48x48.png",
+      "permanent": true
+    },
+    {
+      "source": "/assets/favicon-512.png",
+      "destination": "/assets/favicons/favicon-96x96.png",
+      "permanent": true
+    },
+    {
+      "source": "/assets/apple-touch-icon.png",
+      "destination": "/assets/favicons/apple-touch-icon.png",
+      "permanent": true
+    }
+  ]
+}
